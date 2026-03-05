@@ -1,26 +1,30 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>P2P Local Chat</title>
-  <link rel="stylesheet" href="css/style.css">
-</head>
-<body>
+  <head>
+    <meta charset="UTF-8" />
+    <title>P2P Local Chat</title>
+    <link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+    <div id="app">
+      <aside id="users">
+        <button id="btnVisible">Visible</button>
+        <button id="btnScan">Scanning</button>
+      </aside>
 
-<div id="app">
-  <aside id="users"></aside>
+      <aside id="users"></aside>
 
-  <main id="chat">
-    <div id="messages"></div>
-    <div id="inputBar">
-      <input id="msgInput" placeholder="Type a message…">
-      <button id="sendBtn">Send</button>
+      <main id="chat">
+        <div id="messages"></div>
+        <div id="inputBar">
+          <input id="msgInput" placeholder="Type a message…" />
+          <button id="sendBtn">Send</button>
+        </div>
+      </main>
     </div>
-  </main>
-</div>
 
-<script src="js/discovery.js"></script>
-<script src="js/webrtc.js"></script>
-<script src="js/app.js"></script>
-</body>
+    <script src="js/discovery.js"></script>
+    <script src="js/webrtc.js"></script>
+    <script src="js/app.js"></script>
+  </body>
 </html>

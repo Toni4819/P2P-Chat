@@ -1,5 +1,6 @@
 let pc;
 let dataChannel;
+let targetPeer = null;
 
 function createPeerConnection() {
   pc = new RTCPeerConnection({
@@ -13,17 +14,20 @@ function createPeerConnection() {
 
   pc.onicecandidate = (ev) => {
     if (!ev.candidate) {
-      bc.postMessage({
-        type: "offer",
-        from: myId,
-        to: targetPeer,
-        sdp: pc.localDescription,
-      });
+      localStorage.setItem(
+        "p2p_signal",
+        JSON.stringify({
+          type: "offer",
+          from: myId,
+          to: targetPeer,
+          sdp: pc.localDescription,
+        }),
+      );
     }
   };
 }
 
-function connectToPeer(peerId) {
+function connectToPeer(peerId, candidates) {
   targetPeer = peerId;
   createPeerConnection();
 
@@ -42,12 +46,16 @@ function handleOffer(msg) {
   pc.setRemoteDescription(msg.sdp).then(() => {
     pc.createAnswer().then((a) => {
       pc.setLocalDescription(a);
-      bc.postMessage({
-        type: "answer",
-        from: myId,
-        to: msg.from,
-        sdp: a,
-      });
+
+      localStorage.setItem(
+        "p2p_signal",
+        JSON.stringify({
+          type: "answer",
+          from: myId,
+          to: msg.from,
+          sdp: a,
+        }),
+      );
     });
   });
 }

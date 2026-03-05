@@ -1,6 +1,9 @@
 window.onload = () => {
   const name = prompt("Enter your device name:");
-  startPresence(name || "Anonymous");
+  startDiscovery(name || "Anonymous");
+
+  document.getElementById("btnVisible").onclick = toggleVisibility;
+  document.getElementById("btnScan").onclick = toggleScan;
 
   document.getElementById("sendBtn").onclick = () => {
     const input = document.getElementById("msgInput");
@@ -8,11 +11,3 @@ window.onload = () => {
     input.value = "";
   };
 };
-
-function addMessage(text, me) {
-  const box = document.createElement("div");
-  box.className = "msg" + (me ? " me" : "");
-  box.textContent = text;
-  document.getElementById("messages").appendChild(box);
-  document.getElementById("messages").scrollTop = 999999;
-}
