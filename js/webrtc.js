@@ -1,34 +1,54 @@
-let activeConn = null;
+let pc = null;
+let channel = null;
+let isOfferer = false;
 
-function connectToPeer(targetId) {
-  if (!peer) return;
+function createPeerConnection() {
+  pc = new RTCPeerConnection();
 
-  activeConn = peer.connect(targetId);
+  pc.onicecandidate = (e) => {
+    if (!e.candidate) log("ICE gathering completed.");
+  };
 
-  activeConn.on("open", () => {
-    addMessage("Connected to " + targetId, false);
-  });
+  pc.onconnectionstatechange = () => {
+    log("Connection state: " + pc.connectionState);
+    if (pc.connectionState === "connected") setStatus("connected");
+    if (["disconnected", "failed", "closed"].includes(pc.connectionState)) {
+      setStatus("disconnected");
+    }
+  };
 
-  activeConn.on("data", (data) => {
-    addMessage(data, false);
-  });
+  pc.ondatachannel = (event) => {
+    channel = event.channel;
+    setupChannel();
+    log("DataChannel received.");
+  };
 }
 
-peer?.on("connection", (conn) => {
-  activeConn = conn;
+function setupChannel() {
+  channel.onopen = () => {
+    log("DataChannel opened.");
+    setStatus("connected");
+  };
 
-  conn.on("data", (data) => {
-    addMessage(data, false);
+  channel.onmessage = (e) => {
+    log("Received: " + e.data);
+  };
+
+  channel.onclose = () => {
+    log("DataChannel closed.");
+    setStatus("disconnected");
+  };
+}
+
+async function waitForICE() {
+  if (pc.iceGatheringState === "complete") return;
+  await new Promise((resolve) => {
+    const check = () => {
+      if (pc.iceGatheringState === "complete") {
+        pc.removeEventListener("icegatheringstatechange", check);
+        resolve();
+      }
+    };
+    pc.addEventListener("icegatheringstatechange", check);
   });
-
-  conn.on("open", () => {
-    addMessage("Peer connected: " + conn.peer, false);
-  });
-});
-
-function sendMessage(text) {
-  if (activeConn && activeConn.open) {
-    activeConn.send(text);
-    addMessage(text, true);
-  }
 }
