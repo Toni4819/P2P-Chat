@@ -1,0 +1,23 @@
+<script src="https://unpkg.com/peerjs@1.5.2/dist/peerjs.min.js"></script>
+<script>
+  const ROOM_HOST_ID = "p2p-room-host-001";
+  let users = {};
+
+  const peer = new Peer(ROOM_HOST_ID);
+
+  peer.on("connection", (conn) => {
+    conn.on("data", (msg) => {
+      if (msg.type === "join") {
+        users[msg.id] = msg.name;
+
+        // send updated list to everyone
+        for (const id in peer.connections) {
+          peer.connections[id][0].send({
+            type: "userlist",
+            users,
+          });
+        }
+      }
+    });
+  });
+</script>

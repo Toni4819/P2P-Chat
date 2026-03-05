@@ -1,63 +1,44 @@
-let visible = true;
-let scanning = true;
+let peer = null;
+let roomConn = null;
+let myId = null;
+let myName = "";
+let peersList = {};
 
-let beaconPC = null;
-let beaconCandidates = [];
-let knownPeers = {};
+const ROOM_HOST_ID = "p2p-room-host-001"; // fixed ID for the room server
 
 function startDiscovery(name) {
   myName = name;
-  createBeaconPeer();
-  startBeaconLoop();
-  startScanLoop();
-}
 
-function createBeaconPeer() {
-  beaconPC = new RTCPeerConnection({ iceServers: [] });
+  peer = new Peer({
+    debug: 2,
+  });
 
-  beaconPC.onicecandidate = (ev) => {
-    if (ev.candidate) {
-      beaconCandidates.push(ev.candidate.candidate);
-    }
-  };
+  peer.on("open", (id) => {
+    myId = id;
+    connectToRoomHost();
+  });
 
-  beaconPC.createOffer({ iceRestart: true }).then((o) => {
-    beaconPC.setLocalDescription(o);
+  peer.on("connection", (conn) => {
+    // If someone connects directly to us (chat), handled in webrtc.js
   });
 }
 
-function startBeaconLoop() {
-  setInterval(() => {
-    if (!visible) return;
-    if (beaconCandidates.length === 0) return;
+function connectToRoomHost() {
+  roomConn = peer.connect(ROOM_HOST_ID);
 
-    const msg = {
-      type: "beacon",
+  roomConn.on("open", () => {
+    roomConn.send({
+      type: "join",
       id: myId,
       name: myName,
-      candidates: beaconCandidates,
-      ts: Date.now(),
-    };
+    });
+  });
 
-    localStorage.setItem("p2p_beacon", JSON.stringify(msg));
-  }, 1500);
-}
-
-function startScanLoop() {
-  window.addEventListener("storage", (ev) => {
-    if (!scanning) return;
-    if (ev.key !== "p2p_beacon") return;
-
-    const msg = JSON.parse(ev.newValue || "{}");
-    if (!msg.id || msg.id === myId) return;
-
-    knownPeers[msg.id] = {
-      name: msg.name,
-      candidates: msg.candidates,
-      ts: Date.now(),
-    };
-
-    updateUserList();
+  roomConn.on("data", (msg) => {
+    if (msg.type === "userlist") {
+      peersList = msg.users;
+      updateUserList();
+    }
   });
 }
 
@@ -68,27 +49,13 @@ function updateUserList() {
   users.innerHTML = "";
   buttons.forEach((btn) => users.appendChild(btn));
 
-  for (const id in knownPeers) {
-    if (Date.now() - knownPeers[id].ts > 5000) continue;
+  for (const id in peersList) {
+    if (id === myId) continue;
 
     const div = document.createElement("div");
     div.className = "user";
-    div.textContent = knownPeers[id].name;
-    div.onclick = () => connectToPeer(id, knownPeers[id].candidates);
+    div.textContent = peersList[id];
+    div.onclick = () => connectToPeer(id);
     users.appendChild(div);
   }
-}
-
-function toggleVisibility() {
-  visible = !visible;
-  const btn = document.getElementById("btnVisible");
-  btn.classList.toggle("active", visible);
-  btn.textContent = visible ? "Visible" : "Hidden";
-}
-
-function toggleScan() {
-  scanning = !scanning;
-  const btn = document.getElementById("btnScan");
-  btn.classList.toggle("active", scanning);
-  btn.textContent = scanning ? "Scanning" : "Stopped";
 }

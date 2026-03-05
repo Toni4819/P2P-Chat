@@ -1,77 +1,34 @@
-let pc;
-let dataChannel;
-let targetPeer = null;
+let activeConn = null;
 
-function createPeerConnection() {
-  pc = new RTCPeerConnection({
-    iceServers: [{ urls: "stun:stun.l.google.com:19302" }],
+function connectToPeer(targetId) {
+  if (!peer) return;
+
+  activeConn = peer.connect(targetId);
+
+  activeConn.on("open", () => {
+    addMessage("Connected to " + targetId, false);
   });
 
-  pc.ondatachannel = (ev) => {
-    dataChannel = ev.channel;
-    setupDataChannel();
-  };
-
-  pc.onicecandidate = (ev) => {
-    if (!ev.candidate) {
-      localStorage.setItem(
-        "p2p_signal",
-        JSON.stringify({
-          type: "offer",
-          from: myId,
-          to: targetPeer,
-          sdp: pc.localDescription,
-        }),
-      );
-    }
-  };
-}
-
-function connectToPeer(peerId, candidates) {
-  targetPeer = peerId;
-  createPeerConnection();
-
-  dataChannel = pc.createDataChannel("chat");
-  setupDataChannel();
-
-  pc.createOffer().then((o) => {
-    pc.setLocalDescription(o);
+  activeConn.on("data", (data) => {
+    addMessage(data, false);
   });
 }
 
-function handleOffer(msg) {
-  targetPeer = msg.from;
-  createPeerConnection();
+peer?.on("connection", (conn) => {
+  activeConn = conn;
 
-  pc.setRemoteDescription(msg.sdp).then(() => {
-    pc.createAnswer().then((a) => {
-      pc.setLocalDescription(a);
-
-      localStorage.setItem(
-        "p2p_signal",
-        JSON.stringify({
-          type: "answer",
-          from: myId,
-          to: msg.from,
-          sdp: a,
-        }),
-      );
-    });
+  conn.on("data", (data) => {
+    addMessage(data, false);
   });
-}
 
-function handleAnswer(msg) {
-  pc.setRemoteDescription(msg.sdp);
-}
-
-function setupDataChannel() {
-  dataChannel.onopen = () => console.log("Connected");
-  dataChannel.onmessage = (ev) => addMessage(ev.data, false);
-}
+  conn.on("open", () => {
+    addMessage("Peer connected: " + conn.peer, false);
+  });
+});
 
 function sendMessage(text) {
-  if (dataChannel && dataChannel.readyState === "open") {
-    dataChannel.send(text);
+  if (activeConn && activeConn.open) {
+    activeConn.send(text);
     addMessage(text, true);
   }
 }
