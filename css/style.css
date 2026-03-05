@@ -90,3 +90,37 @@ aside#users {
   border: none;
   cursor: pointer;
 }
+
+.toggle-btn {
+  width: 100%;
+  padding: 10px;
+  margin-bottom: 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: #1b222c;
+  color: var(--text);
+  cursor: pointer;
+  text-align: center;
+  font-size: 0.9rem;
+  transition: 0.15s;
+}
+
+.toggle-btn.active {
+  background: #1f6feb;
+  border-color: #1f6feb;
+  color: white;
+}
+
+.toggle-btn:hover {
+  background: var(--accent-soft);
+}
+
+#toggleRow {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+#toggleRow .toggle-btn {
+  flex: 1;
+}

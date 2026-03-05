@@ -36,31 +36,37 @@ function startBeaconLoop() {
       id: myId,
       name: myName,
       candidates: beaconCandidates,
+      ts: Date.now(),
     };
 
     localStorage.setItem("p2p_beacon", JSON.stringify(msg));
   }, 1500);
 }
 
-window.addEventListener("storage", (ev) => {
-  if (!scanning) return;
-  if (ev.key !== "p2p_beacon") return;
+function startScanLoop() {
+  window.addEventListener("storage", (ev) => {
+    if (!scanning) return;
+    if (ev.key !== "p2p_beacon") return;
 
-  const msg = JSON.parse(ev.newValue || "{}");
-  if (!msg.id || msg.id === myId) return;
+    const msg = JSON.parse(ev.newValue || "{}");
+    if (!msg.id || msg.id === myId) return;
 
-  knownPeers[msg.id] = {
-    name: msg.name,
-    candidates: msg.candidates,
-    ts: Date.now(),
-  };
+    knownPeers[msg.id] = {
+      name: msg.name,
+      candidates: msg.candidates,
+      ts: Date.now(),
+    };
 
-  updateUserList();
-});
+    updateUserList();
+  });
+}
 
 function updateUserList() {
   const users = document.getElementById("users");
+  const buttons = document.querySelectorAll(".toggle-btn");
+
   users.innerHTML = "";
+  buttons.forEach((btn) => users.appendChild(btn));
 
   for (const id in knownPeers) {
     if (Date.now() - knownPeers[id].ts > 5000) continue;
@@ -75,24 +81,14 @@ function updateUserList() {
 
 function toggleVisibility() {
   visible = !visible;
-  document.getElementById("btnVisible").textContent = visible
-    ? "Visible"
-    : "Hidden";
+  const btn = document.getElementById("btnVisible");
+  btn.classList.toggle("active", visible);
+  btn.textContent = visible ? "Visible" : "Hidden";
 }
 
 function toggleScan() {
   scanning = !scanning;
-  document.getElementById("btnScan").textContent = scanning
-    ? "Scanning"
-    : "Stopped";
+  const btn = document.getElementById("btnScan");
+  btn.classList.toggle("active", scanning);
+  btn.textContent = scanning ? "Scanning" : "Stopped";
 }
-window.addEventListener("storage", (ev) => {
-  if (ev.key !== "p2p_signal") return;
-
-  const msg = JSON.parse(ev.newValue || "{}");
-  if (!msg.type) return;
-  if (msg.to !== myId) return;
-
-  if (msg.type === "offer") handleOffer(msg);
-  if (msg.type === "answer") handleAnswer(msg);
-});
