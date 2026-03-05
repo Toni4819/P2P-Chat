@@ -6,49 +6,61 @@ function createPeerConnection() {
   pc = new RTCPeerConnection();
 
   pc.onicecandidate = (e) => {
-    if (!e.candidate) log("ICE gathering completed.");
+    if (!e.candidate) console.log("ICE complete");
+  };
+
+  pc.ondatachannel = (e) => {
+    channel = e.channel;
+    setupChannel();
   };
 
   pc.onconnectionstatechange = () => {
-    log("Connection state: " + pc.connectionState);
-    if (pc.connectionState === "connected") setStatus("connected");
-    if (["disconnected", "failed", "closed"].includes(pc.connectionState)) {
-      setStatus("disconnected");
-    }
-  };
-
-  pc.ondatachannel = (event) => {
-    channel = event.channel;
-    setupChannel();
-    log("DataChannel received.");
+    console.log("State:", pc.connectionState);
   };
 }
 
 function setupChannel() {
-  channel.onopen = () => {
-    log("DataChannel opened.");
-    setStatus("connected");
-  };
-
-  channel.onmessage = (e) => {
-    log("Received: " + e.data);
-  };
-
-  channel.onclose = () => {
-    log("DataChannel closed.");
-    setStatus("disconnected");
-  };
+  channel.onopen = () => appendChat("System", "Channel open");
+  channel.onmessage = (e) => appendChat("Peer", e.data);
 }
 
-async function waitForICE() {
+async function waitICE() {
   if (pc.iceGatheringState === "complete") return;
-  await new Promise((resolve) => {
-    const check = () => {
-      if (pc.iceGatheringState === "complete") {
-        pc.removeEventListener("icegatheringstatechange", check);
-        resolve();
-      }
-    };
-    pc.addEventListener("icegatheringstatechange", check);
+  await new Promise((res) => {
+    pc.addEventListener("icegatheringstatechange", () => {
+      if (pc.iceGatheringState === "complete") res();
+    });
   });
+}
+
+async function createOfferToken() {
+  isOfferer = true;
+  createPeerConnection();
+  channel = pc.createDataChannel("chat");
+  setupChannel();
+
+  const offer = await pc.createOffer();
+  await pc.setLocalDescription(offer);
+  await waitICE();
+
+  return btoa(JSON.stringify(pc.localDescription));
+}
+
+async function createAnswerToken(offerToken) {
+  isOfferer = false;
+  createPeerConnection();
+
+  const offer = JSON.parse(atob(offerToken));
+  await pc.setRemoteDescription(offer);
+
+  const answer = await pc.createAnswer();
+  await pc.setLocalDescription(answer);
+  await waitICE();
+
+  return btoa(JSON.stringify(pc.localDescription));
+}
+
+async function applyAnswerToken(answerToken) {
+  const answer = JSON.parse(atob(answerToken));
+  await pc.setRemoteDescription(answer);
 }

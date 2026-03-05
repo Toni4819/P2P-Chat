@@ -1,4 +1,3 @@
-// Profile storage
 const profileKey = "p2p_profile";
 
 function loadProfile() {
@@ -12,8 +11,8 @@ function loadProfile() {
   return JSON.parse(raw);
 }
 
-function saveProfile(profile) {
-  localStorage.setItem(profileKey, JSON.stringify(profile));
+function saveProfile(p) {
+  localStorage.setItem(profileKey, JSON.stringify(p));
 }
 
 let profile = loadProfile();

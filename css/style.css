@@ -1,84 +1,59 @@
 body {
-  font-family:
-    system-ui,
-    -apple-system,
-    BlinkMacSystemFont,
-    sans-serif;
-  max-width: 900px;
-  margin: 20px auto;
-  padding: 0 10px;
+  margin: 0;
+  font-family: system-ui, sans-serif;
 }
 
-h1 {
-  font-size: 1.4rem;
-  margin-bottom: 16px;
+#layout {
+  display: flex;
+  height: 100vh;
 }
 
-section {
-  border: 1px solid #ccc;
-  padding: 12px;
-  margin-bottom: 16px;
-  border-radius: 8px;
-  background: #fafafa;
+aside#sidebar {
+  width: 260px;
+  background: #f2f2f2;
+  border-right: 1px solid #ccc;
+  padding: 10px;
+  overflow-y: auto;
 }
 
-label {
-  display: block;
-  margin-bottom: 4px;
+.contactItem {
+  padding: 8px;
+  margin-bottom: 6px;
+  background: #fff;
+  border-radius: 6px;
+  cursor: pointer;
+  border: 1px solid #ddd;
 }
 
+.contactItem:hover {
+  background: #e9e9e9;
+}
+
+main#mainPanel {
+  flex: 1;
+  padding: 20px;
+  overflow-y: auto;
+}
+
+textarea,
 input[type="text"] {
   width: 100%;
-  padding: 6px;
-  margin-bottom: 8px;
-}
-
-textarea {
-  width: 100%;
-  min-height: 100px;
-  padding: 6px;
+  padding: 8px;
+  margin: 6px 0;
   font-family: monospace;
 }
 
 button {
-  padding: 6px 10px;
-  margin-top: 4px;
+  padding: 6px 12px;
   cursor: pointer;
 }
 
-#qrcode {
-  margin: 10px auto;
-  width: 256px;
-  height: 256px;
-}
-
-pre {
-  background: #f0f0f0;
-  padding: 8px;
-  overflow-x: auto;
-  font-size: 0.9rem;
-}
-
-.row {
-  display: flex;
-  gap: 12px;
-  flex-wrap: wrap;
-}
-
-.col {
-  flex: 1 1 250px;
-}
-
-#log {
-  font-size: 0.85rem;
-  max-height: 220px;
-  overflow-y: auto;
+#chatLog {
   background: #111;
   color: #0f0;
-  padding: 8px;
-  border-radius: 4px;
-}
-
-#status {
-  font-weight: bold;
+  padding: 10px;
+  height: 250px;
+  overflow-y: auto;
+  border-radius: 6px;
+  margin-bottom: 10px;
 }

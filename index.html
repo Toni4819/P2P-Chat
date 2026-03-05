@@ -2,64 +2,23 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>P2P Local Chat (Pure WebRTC)</title>
+    <title>P2P Chat – WebRTC</title>
     <link rel="stylesheet" href="css/style.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   </head>
+
   <body>
-    <h1>P2P Local Chat (Pure WebRTC, no server)</h1>
-
-    <section>
-      <h2>Local profile</h2>
-      <label>Device name:</label>
-      <input type="text" id="deviceName" placeholder="e.g. Living room iPad" />
-      <button id="saveProfile">Save profile</button>
-      <div>Your local ID: <span id="localId"></span></div>
-    </section>
-
-    <section>
-      <h2>Step A → B: create offer (you are A)</h2>
-      <button id="createOffer">Create offer</button>
-      <div id="qrcode"></div>
-      <h3>Offer token</h3>
-      <pre id="offerText"></pre>
-    </section>
-
-    <section>
-      <h2>Step B: join an offer (you are B)</h2>
-      <textarea id="remoteOffer" placeholder="Paste offer token..."></textarea>
-      <button id="createAnswer">Create answer</button>
-      <h3>Answer token</h3>
-      <pre id="answerText"></pre>
-    </section>
-
-    <section>
-      <h2>Back on A: apply the answer</h2>
-      <textarea
-        id="remoteAnswer"
-        placeholder="Paste answer token..."
-      ></textarea>
-      <button id="applyAnswer">Apply answer and connect</button>
-    </section>
-
-    <section>
-      <h2>Chat</h2>
-      <div>Status: <span id="status">disconnected</span></div>
-      <div class="row">
-        <div class="col">
-          <h3>Send</h3>
-          <textarea id="outgoing" placeholder="Type your message..."></textarea>
-          <button id="send">Send</button>
-        </div>
-        <div class="col">
-          <h3>Log</h3>
-          <div id="log"></div>
-        </div>
-      </div>
-    </section>
+    <div id="layout">
+      <aside id="sidebar"></aside>
+      <main id="mainPanel"></main>
+    </div>
 
     <script src="js/profile.js"></script>
+    <script src="js/contacts.js"></script>
     <script src="js/webrtc.js"></script>
-    <script src="js/ui.js"></script>
+
+    <script src="js/ui/sidebar.js"></script>
+    <script src="js/ui/chatpanel.js"></script>
+    <script src="js/ui/main.js"></script>
   </body>
 </html>
