@@ -11,11 +11,11 @@ function saveContacts(list) {
 
 let contacts = loadContacts();
 
-function addContact(name, offerToken) {
+function addContact(name, partnerOfferToken) {
   const c = {
     id: crypto.randomUUID(),
     name,
-    offerToken,
+    partnerOfferToken
   };
   contacts.push(c);
   saveContacts(contacts);
@@ -23,5 +23,5 @@ function addContact(name, offerToken) {
 }
 
 function getContact(id) {
-  return contacts.find((c) => c.id === id);
+  return contacts.find(c => c.id === id);
 }
