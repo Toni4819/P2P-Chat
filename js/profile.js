@@ -4,7 +4,7 @@ function loadProfile() {
   const raw = localStorage.getItem(profileKey);
   if (!raw) {
     const id = crypto.randomUUID();
-    const profile = { id, name: "Device " + id.slice(0, 4) };
+    const profile = { id, name: "User " + id.slice(0, 4) };
     localStorage.setItem(profileKey, JSON.stringify(profile));
     return profile;
   }

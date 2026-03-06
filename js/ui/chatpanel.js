@@ -1,11 +1,3 @@
-function truncateId(id, len = 10) {
-  return id.length <= len ? id : id.slice(0, len) + "...";
-}
-
-function copyToClipboard(text) {
-  navigator.clipboard?.writeText(text).catch(() => {});
-}
-
 function appendChat(sender, msg) {
   const log = document.getElementById("chatLog");
   if (!log) return;
@@ -15,7 +7,39 @@ function appendChat(sender, msg) {
   log.scrollTop = log.scrollHeight;
 }
 
-/* -------- Add contact -------- */
+/* ---------------- PROFILE PANEL ---------------- */
+
+function showProfilePanel() {
+  const main = document.getElementById("mainPanel");
+
+  const link = `${location.origin}/?peer=${localPeerId}&name=${encodeURIComponent(profile.name)}`;
+
+  main.innerHTML = `
+    <h2>My profile</h2>
+
+    <label>Your name</label>
+    <input id="myName" value="${profile.name}">
+    <button id="saveName">Save</button>
+
+    <h3>Share your link</h3>
+    <div id="myQR"></div>
+    <pre>${link}</pre>
+  `;
+
+  new QRCode(document.getElementById("myQR"), {
+    text: link,
+    width: 200,
+    height: 200,
+  });
+
+  document.getElementById("saveName").onclick = () => {
+    profile.name = document.getElementById("myName").value.trim();
+    saveProfile(profile);
+    alert("Name updated");
+  };
+}
+
+/* ---------------- ADD CONTACT PANEL ---------------- */
 
 function showAddContactPanel() {
   const main = document.getElementById("mainPanel");
@@ -23,38 +47,20 @@ function showAddContactPanel() {
   main.innerHTML = `
     <h2>Add contact</h2>
 
-    <h3>Your PeerJS ID</h3>
-    <div>
-      <span class="tokenShort" id="myPeerShort"></span>
-    </div>
-    <pre id="myPeerFull"></pre>
+    <label>Name</label>
+    <input id="newName">
 
-    <h3>New contact</h3>
-    <input id="newContactName" placeholder="Contact name">
-    <input id="newContactPeerId" placeholder="Contact PeerJS ID">
+    <label>PeerJS ID</label>
+    <input id="newPeerId">
 
-    <button id="saveNewContact">Save contact</button>
+    <button id="saveContact">Save</button>
   `;
 
-  const shortSpan = document.getElementById("myPeerShort");
-  const fullPre = document.getElementById("myPeerFull");
+  document.getElementById("saveContact").onclick = () => {
+    const name = document.getElementById("newName").value.trim();
+    const peerId = document.getElementById("newPeerId").value.trim();
 
-  if (localPeerId) {
-    shortSpan.textContent = truncateId(localPeerId);
-    shortSpan.title = "Click to copy full ID";
-    shortSpan.onclick = () => copyToClipboard(localPeerId);
-    fullPre.textContent = localPeerId;
-  } else {
-    shortSpan.textContent = "(waiting for PeerJS ID…)";
-    fullPre.textContent = "";
-  }
-
-  document.getElementById("saveNewContact").onclick = () => {
-    const name = document.getElementById("newContactName").value.trim();
-    const peerId = document.getElementById("newContactPeerId").value.trim();
-
-    if (!name) return alert("Enter a name");
-    if (!peerId) return alert("Enter a PeerJS ID");
+    if (!name || !peerId) return alert("Missing fields");
 
     const c = addContact(name, peerId);
     renderSidebar();
@@ -62,7 +68,7 @@ function showAddContactPanel() {
   };
 }
 
-/* -------- Contact panel (connect + chat) -------- */
+/* ---------------- CONTACT PANEL ---------------- */
 
 let currentContact = null;
 
@@ -74,13 +80,12 @@ function showContactPanel(id) {
   const main = document.getElementById("mainPanel");
   main.innerHTML = `
     <h2>Chat with ${c.name}</h2>
-    <p>PeerJS ID: ${c.peerId}</p>
+    <p>PeerID: ${c.peerId}</p>
     <button id="connectBtn">Connect</button>
     <span id="connStatus"></span>
 
-    <h3>Chat</h3>
     <div id="chatLog"></div>
-    <textarea id="chatMsg" placeholder="Message..."></textarea>
+    <textarea id="chatMsg"></textarea>
     <button id="sendMsgBtn">Send</button>
   `;
 
@@ -98,28 +103,19 @@ function showContactPanel(id) {
     if (!msg) return;
 
     try {
-      sendToPeer(c.peerId, profile.name + ": " + msg);
+      sendToPeer(c.peerId, msg);
       appendChat(profile.name, msg);
       document.getElementById("chatMsg").value = "";
-    } catch (e) {
-      appendChat("System", "Not connected to " + c.name);
+    } catch {
+      appendChat("System", "Not connected");
     }
   };
 }
 
-/* -------- Brancher les callbacks PeerJS -------- */
+/* ---------------- PEER MESSAGE HANDLER ---------------- */
 
-onPeerMessage = (peerId, msg) => {
+onPeerMessage = (peerId, name, msg) => {
   if (!currentContact) return;
   if (currentContact.peerId !== peerId) return;
-  appendChat("Peer", msg);
-};
-
-onPeerIncomingConnection = (conn) => {
-  // Si on a un contact avec ce peerId, on peut afficher un petit message
-  const contact = contacts.find((c) => c.peerId === conn.peer);
-  if (contact && currentContact && currentContact.peerId === conn.peer) {
-    const status = document.getElementById("connStatus");
-    if (status) status.textContent = " Connected (incoming)";
-  }
+  appendChat(name, msg);
 };

@@ -1,70 +1,66 @@
 let peer = null;
 let localPeerId = null;
-const connections = new Map(); // peerId -> conn
+let connections = new Map();
 
-// callbacks UI (définies dans chatpanel.js)
-let onPeerReady = null;
 let onPeerMessage = null;
-let onPeerIncomingConnection = null;
+let onPeerIncoming = null;
 
-function initPeer(onReadyCb) {
-  onPeerReady = onReadyCb;
-
+function initPeer(onReady) {
   let savedId = localStorage.getItem("peerjs_id");
+
   peer = new Peer(savedId || undefined);
 
   peer.on("open", (id) => {
+    localPeerId = id;
     localStorage.setItem("peerjs_id", id);
-    localPeerId = id;
-    console.log("My PeerJS ID:", id);
-    if (onPeerReady) onPeerReady(id);
-  });
-
-  peer.on("open", (id) => {
-    localPeerId = id;
-    console.log("My PeerJS ID:", id);
-    if (onPeerReady) onPeerReady(id);
+    console.log("PeerJS ID:", id);
+    onReady && onReady(id);
   });
 
   peer.on("connection", (conn) => {
-    console.log("Incoming connection from", conn.peer);
-    setupConnection(conn);
+    setupConn(conn);
     connections.set(conn.peer, conn);
-    if (onPeerIncomingConnection) onPeerIncomingConnection(conn);
+    onPeerIncoming && onPeerIncoming(conn);
   });
 
-  peer.on("error", (err) => {
-    console.error("Peer error:", err);
-  });
+  peer.on("error", (err) => console.error("PeerJS error:", err));
 }
 
-function setupConnection(conn) {
-  conn.on("open", () => {
-    console.log("Connection open with", conn.peer);
-  });
+function setupConn(conn) {
+  conn.on("data", (raw) => {
+    const data = JSON.parse(raw);
 
-  conn.on("data", (msg) => {
-    console.log("Data from", conn.peer, ":", msg);
-    if (onPeerMessage) onPeerMessage(conn.peer, msg);
+    // Auto-add if unknown
+    let c = contacts.find((c) => c.peerId === data.peerId);
+    if (!c) {
+      c = addContact(data.name, data.peerId);
+      renderSidebar();
+    }
+
+    // Auto-update name
+    if (c.name !== data.name) {
+      c.name = data.name;
+      saveContacts(contacts);
+      renderSidebar();
+    }
+
+    // Forward to UI
+    onPeerMessage && onPeerMessage(data.peerId, data.name, data.msg);
   });
 
   conn.on("close", () => {
-    console.log("Connection closed with", conn.peer);
     connections.delete(conn.peer);
   });
 }
 
 function connectToPeer(peerId, onOpen) {
   if (connections.has(peerId)) {
-    const existing = connections.get(peerId);
-    if (existing.open) {
-      onOpen && onOpen(existing);
-      return existing;
-    }
+    const c = connections.get(peerId);
+    if (c.open) return onOpen && onOpen(c);
   }
 
   const conn = peer.connect(peerId);
-  setupConnection(conn);
+  setupConn(conn);
 
   conn.on("open", () => {
     connections.set(peerId, conn);
@@ -76,8 +72,12 @@ function connectToPeer(peerId, onOpen) {
 
 function sendToPeer(peerId, msg) {
   const conn = connections.get(peerId);
-  if (!conn || !conn.open) {
-    throw new Error("No open connection to " + peerId);
-  }
-  conn.send(msg);
+  if (!conn || !conn.open) throw new Error("Not connected");
+  conn.send(
+    JSON.stringify({
+      peerId: localPeerId,
+      name: profile.name,
+      msg,
+    }),
+  );
 }

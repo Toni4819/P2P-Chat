@@ -4,11 +4,11 @@ function renderSidebar() {
     <h2>Contacts</h2>
     <div id="contactList"></div>
     <button id="addContactBtn">Add contact</button>
+    <button id="myProfileBtn">My profile</button>
   `;
 
-  document.getElementById("addContactBtn").onclick = () => {
-    showAddContactPanel();
-  };
+  document.getElementById("addContactBtn").onclick = showAddContactPanel;
+  document.getElementById("myProfileBtn").onclick = showProfilePanel;
 
   renderContactList();
 }
@@ -20,7 +20,7 @@ function renderContactList() {
   contacts.forEach((c) => {
     const div = document.createElement("div");
     div.className = "contactItem";
-    div.textContent = c.name + " (" + c.peerId.slice(0, 6) + "…)";
+    div.textContent = `${c.name} (${c.peerId.slice(0, 6)}…)`;
     div.onclick = () => showContactPanel(c.id);
     list.appendChild(div);
   });
