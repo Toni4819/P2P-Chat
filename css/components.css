@@ -188,9 +188,9 @@ input {
   font-size: 14px;
   line-height: 1.35;
 
-  white-space: pre-line; /* garde les \n mais pas les espaces inutiles */
-  word-break: break-word; /* casse les mots trop longs */
-  overflow-wrap: break-word; /* sécurité */
+  white-space: normal;
+  word-break: break-word;
+  overflow-wrap: break-word;
   max-width: 80%;
 }
 
