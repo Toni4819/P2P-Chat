@@ -12,7 +12,7 @@ function appendChat(sender, msg) {
 function showProfilePanel() {
   const main = document.getElementById("mainPanel");
 
-  const link = `${location.origin}/?peer=${localPeerId}&name=${encodeURIComponent(profile.name)}`;
+  const link = `${location.origin}/P2P-Local-Chat/?peer=${localPeerId} &name=${encodeURIComponent(profile.name)}`;
 
   main.innerHTML = `
     <h2>My profile</h2>

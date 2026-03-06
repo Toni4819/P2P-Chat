@@ -84,3 +84,69 @@ button {
   font-family: monospace;
   font-size: 0.8rem;
 }
+
+/* Overlay sombre */
+#confirmOverlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.55);
+  display: none;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+}
+
+/* Boîte de confirmation */
+#confirmBox {
+  background: #fff;
+  padding: 20px;
+  border-radius: 10px;
+  width: 320px;
+  text-align: center;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+}
+
+#confirmBox h3 {
+  margin-top: 0;
+}
+
+.confirmButtons {
+  margin-top: 15px;
+  display: flex;
+  justify-content: space-around;
+}
+
+.confirmButtons button {
+  padding: 8px 14px;
+  cursor: pointer;
+  border-radius: 6px;
+  border: none;
+}
+
+#confirmYes {
+  background: #d9534f;
+  color: white;
+}
+
+#confirmNo {
+  background: #ccc;
+}
+.contactItem {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.deleteBtn {
+  color: #b00;
+  cursor: pointer;
+  font-size: 1.3rem;
+  padding: 4px;
+}
+
+.deleteBtn:hover {
+  color: #f00;
+}
