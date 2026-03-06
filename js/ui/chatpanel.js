@@ -7,12 +7,12 @@ function appendChat(sender, msg) {
   log.scrollTop = log.scrollHeight;
 }
 
-/* ---------------- PROFILE PANEL ---------------- */
+/* -------- PROFILE PANEL -------- */
 
 function showProfilePanel() {
   const main = document.getElementById("mainPanel");
 
-  const link = `${location.origin}/P2P-Local-Chat/?peer=${localPeerId} &name=${encodeURIComponent(profile.name)}`;
+  const link = `${location.origin}/?peer=${localPeerId || ""}&name=${encodeURIComponent(profile.name)}`;
 
   main.innerHTML = `
     <h2>My profile</h2>
@@ -26,11 +26,15 @@ function showProfilePanel() {
     <pre>${link}</pre>
   `;
 
-  new QRCode(document.getElementById("myQR"), {
-    text: link,
-    width: 200,
-    height: 200,
-  });
+  if (localPeerId) {
+    new QRCode(document.getElementById("myQR"), {
+      text: link,
+      width: 200,
+      height: 200,
+    });
+  } else {
+    document.getElementById("myQR").textContent = "PeerID not ready yet.";
+  }
 
   document.getElementById("saveName").onclick = () => {
     profile.name = document.getElementById("myName").value.trim();
@@ -39,7 +43,7 @@ function showProfilePanel() {
   };
 }
 
-/* ---------------- ADD CONTACT PANEL ---------------- */
+/* -------- ADD CONTACT PANEL -------- */
 
 function showAddContactPanel() {
   const main = document.getElementById("mainPanel");
@@ -68,7 +72,7 @@ function showAddContactPanel() {
   };
 }
 
-/* ---------------- CONTACT PANEL ---------------- */
+/* -------- CONTACT PANEL -------- */
 
 let currentContact = null;
 
@@ -81,38 +85,54 @@ function showContactPanel(id) {
   main.innerHTML = `
     <h2>Chat with ${c.name}</h2>
     <p>PeerID: ${c.peerId}</p>
-    <button id="connectBtn">Connect</button>
-    <span id="connStatus"></span>
 
     <div id="chatLog"></div>
     <textarea id="chatMsg"></textarea>
     <button id="sendMsgBtn">Send</button>
   `;
 
-  document.getElementById("connectBtn").onclick = () => {
-    const status = document.getElementById("connStatus");
-    status.textContent = " Connecting…";
-
-    connectToPeer(c.peerId, () => {
-      status.textContent = " Connected";
-    });
-  };
-
   document.getElementById("sendMsgBtn").onclick = () => {
-    const msg = document.getElementById("chatMsg").value.trim();
-    if (!msg) return;
-
-    try {
-      sendToPeer(c.peerId, msg);
-      appendChat(profile.name, msg);
-      document.getElementById("chatMsg").value = "";
-    } catch {
-      appendChat("System", "Not connected");
-    }
+    ensurePeerReady(() => {
+      sendMessageFlow();
+    });
   };
 }
 
-/* ---------------- PEER MESSAGE HANDLER ---------------- */
+function sendMessageFlow() {
+  const msgEl = document.getElementById("chatMsg");
+  if (!msgEl) return;
+  const msg = msgEl.value.trim();
+  if (!msg) return;
+
+  const peerId = currentContact.peerId;
+
+  if (!isPeerConnected(peerId)) {
+    appendChat("System", "Connecting…");
+
+    connectToPeer(peerId, () => {
+      appendChat("System", "Connected");
+      try {
+        sendToPeer(peerId, msg);
+        appendChat(profile.name, msg);
+        msgEl.value = "";
+      } catch {
+        appendChat("System", "Failed to send");
+      }
+    });
+
+    return;
+  }
+
+  try {
+    sendToPeer(peerId, msg);
+    appendChat(profile.name, msg);
+    msgEl.value = "";
+  } catch {
+    appendChat("System", "Failed to send");
+  }
+}
+
+/* -------- PEER MESSAGE HANDLER -------- */
 
 onPeerMessage = (peerId, name, msg) => {
   if (!currentContact) return;

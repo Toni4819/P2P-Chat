@@ -16,9 +16,15 @@ function handleAutoAddFromURL() {
 }
 
 window.onload = () => {
-  initPeer(() => {
-    renderSidebar();
-    handleAutoAddFromURL();
-    showProfilePanel();
-  });
+  renderSidebar();
+  handleAutoAddFromURL();
+  showProfilePanel();
+
+  if (!isSafariBrowser()) {
+    // Desktop / Chrome / Firefox → auto-start PeerJS
+    ensurePeerReady(() => {});
+  } else {
+    // Safari → on attend un tap (Send, etc.)
+    console.log("Safari detected: PeerJS will start on first user action.");
+  }
 };
