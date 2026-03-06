@@ -23,13 +23,13 @@ function renderContactList() {
 
     div.innerHTML = `
       <span class="contactName">${c.name} (${c.peerId.slice(0, 6)}…)</span>
-      <i class="iconoir-trash deleteBtn" data-id="${c.id}"></i>
+      <img src="img/svg/trash-alt.svg" class="deleteBtn" data-id="${c.id}">
     `;
 
-    // Ouvrir le chat
+    // Open chat
     div.querySelector(".contactName").onclick = () => showContactPanel(c.id);
 
-    // Supprimer avec confirmation
+    // Delete with confirm
     div.querySelector(".deleteBtn").onclick = (e) => {
       e.stopPropagation();
       confirmDeleteContact(c);
