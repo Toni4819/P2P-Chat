@@ -64,3 +64,25 @@ async function applyAnswerToken(answerToken) {
   const answer = JSON.parse(atob(answerToken));
   await pc.setRemoteDescription(answer);
 }
+
+function waitForConnection() {
+  return new Promise(resolve => {
+    const check = () => {
+      if (pc && pc.connectionState === "connected") {
+        resolve(true);
+      } else {
+        setTimeout(check, 100);
+      }
+    };
+    check();
+  });
+}
+
+function waitForConnectionOrTimeout(ms) {
+  return Promise.race([
+    waitForConnection(),
+    new Promise(resolve => setTimeout(() => resolve(false), ms))
+  ]);
+}
+
+
