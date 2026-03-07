@@ -76,11 +76,15 @@ function showConfirmDialog(message, onConfirm) {
     overlay.remove();
   };
 }
+
 function flashContact(peerId) {
   const el = document.querySelector(`[data-peerid="${peerId}"]`);
   if (!el) return;
 
-  el.classList.add("flash");
+  el.classList.add("unread");
 
-  setTimeout(() => el.classList.remove("flash"), 1500);
+  // Quand on ouvre le chat → on enlève
+  if (currentChatPeerId === peerId) {
+    el.classList.remove("unread");
+  }
 }

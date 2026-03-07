@@ -67,6 +67,9 @@ function escapeHtml(str) {
 function openChat(peerId, name) {
   currentChatPeerId = peerId;
 
+  const el = document.querySelector(`[data-peerid="${peerId}"]`);
+  if (el) el.classList.remove("unread");
+
   const box = document.getElementById("chatMessages");
   if (!box) return;
   box.innerHTML = "";
@@ -75,7 +78,7 @@ function openChat(peerId, name) {
 
   const history = getMessages(peerId);
   history.forEach((m) => {
-    appendMessage(m.from, m.text, m.timestamp);
+    appendMessage(m.from, m.text, m.timestamp, m.status);
   });
 
   const input = document.getElementById("chatInput");
@@ -123,3 +126,33 @@ onPeerMessage = (peerId, name, msg) => {
     flashContact(peerId);
   }
 };
+
+let pendingRetries = {};
+
+setInterval(() => {
+  const now = Date.now();
+
+  for (const id in pendingRetries) {
+    const p = pendingRetries[id];
+
+    if (now - p.lastTry >= 60000) {
+      // retry toutes les 60s
+      p.lastTry = now;
+
+      try {
+        const newId = sendToPeer(p.peerId, p.text);
+
+        updateMessageStatus(p.peerId, id, "envoyé");
+
+        onPeerAck = (fromPeer, ackId) => {
+          if (ackId === newId) {
+            updateMessageStatus(p.peerId, id, "reçu");
+            delete pendingRetries[id];
+          }
+        };
+      } catch {
+        updateMessageStatus(p.peerId, id, "echec");
+      }
+    }
+  }
+}, 1000);

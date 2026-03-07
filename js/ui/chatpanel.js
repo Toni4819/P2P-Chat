@@ -25,7 +25,9 @@ function appendChat(sender, msg, timestamp = Date.now()) {
     div.className = "msg " + (sender === profile.name ? "me" : "them");
     div.innerHTML = `
       <div class="bubble">${renderMessageContent(msg)}</div>
-      <div class="time">${new Date(timestamp).toLocaleTimeString()}</div>
+      <div class="time">
+        ${formatTimestamp(timestamp)} · ${renderStatus(status)}
+      </div>
     `;
   }
 
@@ -201,79 +203,112 @@ let isBusySending = false;
 let onPeerAck = null;
 
 function sendMessageFlow() {
-  const now = Date.now();
-  if (now - lastSentTime < SEND_COOLDOWN) return;
-  lastSentTime = now;
-
-  if (isBusySending) return;
-
   const msgEl = document.getElementById("chatMsg");
   const sendBtn = document.getElementById("sendMsgBtn");
-  if (!msgEl) return;
-
   const msg = msgEl.value.trim();
   if (!msg) return;
 
   const peerId = currentContact.peerId;
 
-  // cooldown bouton
-  if (sendBtn) sendBtn.disabled = true;
-  setTimeout(() => {
-    if (!isBusySending && sendBtn) sendBtn.disabled = false;
-  }, SEND_COOLDOWN);
+  sendBtn.disabled = true;
 
-  isBusySending = true;
+  const timestamp = Date.now();
+  const id = crypto.randomUUID();
 
-  const finish = () => {
-    isBusySending = false;
-    if (sendBtn) sendBtn.disabled = false;
-  };
+  // statut initial
+  saveMessage(peerId, "me", msg, timestamp, "envoi", id);
+  appendChat(profile.name, msg, timestamp, "envoi");
 
-  // --- SI PAS CONNECTÉ ---
-  if (!isPeerConnected(peerId)) {
-    appendChat("System", "Connecting…");
-
-    connectToPeer(peerId, () => {
-      appendChat("System", "Connected");
-
-      const id = sendToPeer(peerId, msg);
-
-      saveMessage(peerId, "me", msg, Date.now(), "envoyé", id);
-      appendChat(profile.name, msg, Date.now(), "envoyé");
-      msgEl.value = "";
-
-      // attendre ACK
-      onPeerAck = (fromPeer, ackId) => {
-        if (ackId === id) {
-          updateMessageStatus(peerId, id, "reçu");
-          finish();
-        }
-      };
-    });
-
-    return;
-  }
-
-  // --- SI DÉJÀ CONNECTÉ ---
-  const id = sendToPeer(peerId, msg);
-
-  saveMessage(peerId, "me", msg, Date.now(), "envoyé", id);
-  appendChat(profile.name, msg, Date.now(), "envoyé");
   msgEl.value = "";
 
-  onPeerAck = (fromPeer, ackId) => {
-    if (ackId === id) {
-      updateMessageStatus(peerId, id, "reçu");
-      finish();
+  const trySend = () => {
+    try {
+      const newId = sendToPeer(peerId, msg);
+
+      updateMessageStatus(peerId, id, "envoyé");
+
+      onPeerAck = (fromPeer, ackId) => {
+        if (ackId === newId) {
+          updateMessageStatus(peerId, id, "reçu");
+          delete pendingRetries[id];
+        }
+      };
+    } catch {
+      updateMessageStatus(peerId, id, "echec");
+
+      pendingRetries[id] = {
+        peerId,
+        text: msg,
+        lastTry: Date.now(),
+      };
     }
   };
+
+  if (!isPeerConnected(peerId)) {
+    connectToPeer(peerId, () => {
+      trySend();
+      sendBtn.disabled = false;
+    });
+  } else {
+    trySend();
+    sendBtn.disabled = false;
+  }
 }
 
 /* -------- PEER MESSAGE HANDLER -------- */
 
 onPeerMessage = (peerId, name, msg, id) => {
-  if (!currentContact) return;
-  if (currentContact.peerId !== peerId) return;
+  saveMessage(peerId, "them", msg, Date.now(), "received", id);
 
-  appendChat(name, msg, Date.now(), ""); // pas de status pour eux
+  if (currentChatPeerId === peerId) {
+    appendMessage("them", msg);
+  } else {
+    flashContact(peerId);
+  }
 };
+
+function formatTimestamp(ts) {
+  const d = new Date(ts);
+  const now = new Date();
+
+  const sameDay =
+    d.getDate() === now.getDate() &&
+    d.getMonth() === now.getMonth() &&
+    d.getFullYear() === now.getFullYear();
+
+  const yesterday = new Date(now);
+  yesterday.setDate(now.getDate() - 1);
+
+  const isYesterday =
+    d.getDate() === yesterday.getDate() &&
+    d.getMonth() === yesterday.getMonth() &&
+    d.getFullYear() === yesterday.getFullYear();
+
+  const time = d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+
+  if (sameDay) return time;
+  if (isYesterday) return "Yesterday at " + time;
+
+  // Format long : 2 March at 8:34
+  const long = `${d.getDate()} ${d.toLocaleString("en", { month: "long" })} at ${time}`;
+
+  // Format court : 2/3/26 at 8:34
+  const short = `${d.getDate()}/${d.getMonth() + 1}/${String(d.getFullYear()).slice(2)} at ${time}`;
+
+  return long; // ou short si tu préfères
+}
+
+function renderStatus(status) {
+  switch (status) {
+    case "sending":
+      return "◌";
+    case "sended":
+      return "✓";
+    case "received":
+      return "✓✓"; // bleu via CSS
+    case "failure":
+      return "⚠️";
+    default:
+      return "";
+  }
+}
