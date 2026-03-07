@@ -183,6 +183,10 @@ function openChat(peerId, name) {
 /* -------- SEND MESSAGE -------- */
 
 function sendCurrentMessage() {
+  if (!peer || !localPeerId) {
+    showProfilePanel(true);
+    return;
+  }
   const input = document.getElementById("chatInput");
   if (!input || !currentChatPeerId) return;
 

@@ -1,4 +1,4 @@
-// main.js — bootstrap UI + auto-add via URL
+// main.js
 
 function handleAutoAddFromURL() {
   const params = new URLSearchParams(location.search);
@@ -20,12 +20,14 @@ function handleAutoAddFromURL() {
 window.onload = () => {
   renderSidebar();
   handleAutoAddFromURL();
-  showProfilePanel();
 
-  if (!isSafariBrowser()) {
-    ensurePeerReady(() => {});
+  if (isSafariBrowser()) {
+    console.log("Safari detected → PeerJS will start manually.");
+    showProfilePanel(true);
   } else {
-    console.log("Safari detected: PeerJS will start on first user action.");
+    ensurePeerReady(() => {
+      showProfilePanel(false);
+    });
   }
 };
 

@@ -119,6 +119,11 @@ function setupConn(conn) {
 }
 
 function connectToPeer(peerId, onOpen) {
+  if (!peer || !localPeerId) {
+    console.warn("PeerJS not ready → cannot connect yet");
+    return null;
+  }
+
   if (connections.has(peerId)) {
     const c = connections.get(peerId);
     if (c.open) {

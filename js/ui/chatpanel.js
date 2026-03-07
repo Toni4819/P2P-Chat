@@ -1,6 +1,6 @@
-// chatpanel.js — panneaux profil + ajout de contact
+// chatpanel.js
 
-function showProfilePanel() {
+function showProfilePanel(showStartButton = false) {
   const main = document.getElementById("mainPanel");
 
   const link = `${location.origin}/?peer=${localPeerId || ""}&name=${encodeURIComponent(profile.name)}`;
@@ -12,24 +12,30 @@ function showProfilePanel() {
     <input id="myName" value="${profile.name}">
     <button id="saveName">Save</button>
 
+    ${showStartButton ? `<button id="startPeerBtn">Start PeerJS</button>` : ""}
+
     <h3>Share your link</h3>
     <div id="myQR"></div>
     <pre>${link}</pre>
   `;
 
+  if (showStartButton) {
+    document.getElementById("startPeerBtn").onclick = () => {
+      ensurePeerReady(() => {
+        showProfilePanel(false);
+      });
+    };
+  }
+
+  // QR code
   if (localPeerId) {
     const qr = new QRCodeStyling({
       width: 200,
       height: 200,
       type: "svg",
       data: link,
-      dotsOptions: {
-        color: "#000",
-        type: "rounded",
-      },
-      backgroundOptions: {
-        color: "transparent",
-      },
+      dotsOptions: { color: "#000", type: "rounded" },
+      backgroundOptions: { color: "transparent" },
     });
 
     qr.append(document.getElementById("myQR"));
@@ -45,8 +51,6 @@ function showProfilePanel() {
         <img id="qrcode" src="${base64}" alt="QR Code">
       `;
     }, 20);
-  } else {
-    document.getElementById("myQR").textContent = "PeerID not ready yet.";
   }
 
   document.getElementById("saveName").onclick = () => {
