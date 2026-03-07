@@ -1,8 +1,6 @@
 // chat.js
 
 import { PeerManager } from "../peer/utils/PeerManager.js";
-import { SendManager } from "../peer/utils/SendManager.js";
-import { showProfilePanel } from "./chatpanel.js";
 
 export let currentChatPeerId = null;
 
@@ -200,30 +198,57 @@ export function openChat(peerId, name) {
    SEND MESSAGE
 ============================ */
 
-function sendCurrentMessage() {
-  if (!PeerManager.ready) {
-    showProfilePanel(true);
-    return;
+export function openChat(peerId, name) {
+  currentChatPeerId = peerId;
+
+  if (!PeerManager.connections.has(peerId)) {
+    PeerManager.connect(peerId, () => {
+      console.log("Connected to", peerId);
+    });
   }
 
+  const el = document.querySelector(`[data-peerid="${peerId}"]`);
+  if (el) el.classList.remove("unread");
+
+  const main = document.getElementById("mainPanel");
+  if (!main) return;
+
+  main.innerHTML = `
+    <h2>Chat with ${name}</h2>
+    <p>PeerID: ${peerId}</p>
+
+    <div id="chatMessages"></div>
+
+    <div id="chatInputRow">
+      <input id="chatInput" placeholder="Type a message…">
+      <button id="chatSend">Send</button>
+    </div>
+  `;
+
+  // Load history
+  const history = getMessages(peerId);
+  history.forEach((m) =>
+    appendMessage(m.from, m.text, m.timestamp, m.status, m.id),
+  );
+
   const input = document.getElementById("chatInput");
-  if (!input || !currentChatPeerId) return;
+  const sendBtn = document.getElementById("chatSend");
 
-  const text = input.value.trim();
-  if (!text) return;
+  // XOR lock
+  let lock = false;
+  const safeSend = () => {
+    if (lock) return;
+    lock = true;
+    sendCurrentMessage();
+    setTimeout(() => (lock = false), 0);
+  };
 
-  const peerId = currentChatPeerId;
-  const timestamp = Date.now();
-
-  const id = saveMessage(peerId, "me", text, timestamp, "sending");
-
-  appendMessage("me", text, timestamp, "sending", id);
-  input.value = "";
-
-  const newId = SendManager.send(peerId, text);
-
-  if (newId !== id) {
-    updateMessageStatus(peerId, id, "sent");
+  // Handlers
+  if (sendBtn) sendBtn.onclick = safeSend;
+  if (input) {
+    input.onkeydown = (e) => {
+      if (e.key === "Enter") safeSend();
+    };
   }
 }
 
