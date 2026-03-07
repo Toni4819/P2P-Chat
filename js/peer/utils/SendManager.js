@@ -1,4 +1,4 @@
-import { updateMessageStatus } from "../../ui/chat.js";
+import { appendMessage, updateMessageStatus } from "../../ui/chat.js";
 import { profile } from "../../ui/profile.js";
 import { AckManager } from "./AckManager.js";
 import { PeerManager } from "./PeerManager.js";
