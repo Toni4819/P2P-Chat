@@ -1,3 +1,5 @@
+// sidebar.js — liste des contacts + boutons
+
 function renderSidebar() {
   const sb = document.getElementById("sidebar");
   sb.innerHTML = `

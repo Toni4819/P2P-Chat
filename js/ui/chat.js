@@ -1,8 +1,10 @@
-// chat.js — système de chat moderne
+// chat.js — logique de chat + rendu
 
 let currentChatPeerId = null;
+let pendingRetries = {};
+let onPeerAck = null;
 
-/* ---------------- MESSAGE STORAGE ---------------- */
+/* -------- MESSAGE STORAGE -------- */
 
 function saveMessage(
   peerId,
@@ -13,7 +15,6 @@ function saveMessage(
   id = crypto.randomUUID(),
 ) {
   const all = JSON.parse(localStorage.getItem("messages") || "{}");
-
   if (!all[peerId]) all[peerId] = [];
 
   all[peerId].push({
@@ -33,7 +34,83 @@ function getMessages(peerId) {
   return all[peerId] || [];
 }
 
-/* ---------------- MESSAGE RENDERING ---------------- */
+function updateMessageStatus(peerId, id, newStatus) {
+  const all = JSON.parse(localStorage.getItem("messages") || "{}");
+  if (!all[peerId]) return;
+
+  const msg = all[peerId].find((m) => m.id === id);
+  if (!msg) return;
+
+  msg.status = newStatus;
+  localStorage.setItem("messages", JSON.stringify(all));
+}
+
+/* -------- RENDER HELPERS -------- */
+
+function renderMessageContent(text) {
+  const parts = text.split(/\s+/);
+
+  const htmlParts = parts.map((part) => {
+    if (part.match(/^https?:\/\/.*\.(gif|png|jpg|jpeg)$/i)) {
+      return `<img src="${part}" class="chatImage">`;
+    }
+
+    if (part.startsWith("http://") || part.startsWith("https://")) {
+      return `<a href="${part}" target="_blank">${part}</a>`;
+    }
+
+    return escapeHtml(part);
+  });
+
+  return htmlParts.join(" ");
+}
+
+function escapeHtml(str) {
+  return str.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
+
+function formatTimestamp(ts) {
+  const d = new Date(ts);
+  const now = new Date();
+
+  const sameDay =
+    d.getDate() === now.getDate() &&
+    d.getMonth() === now.getMonth() &&
+    d.getFullYear() === now.getFullYear();
+
+  const yesterday = new Date(now);
+  yesterday.setDate(now.getDate() - 1);
+
+  const isYesterday =
+    d.getDate() === yesterday.getDate() &&
+    d.getMonth() === yesterday.getMonth() &&
+    d.getFullYear() === yesterday.getFullYear();
+
+  const time = d.toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
+
+  if (sameDay) return time;
+  if (isYesterday) return "Yesterday at " + time;
+
+  const long = `${d.getDate()} ${d.toLocaleString("en", { month: "long" })} at ${time}`;
+  return long;
+}
+
+function renderStatus(status) {
+  switch (status) {
+    case "sending":
+      return "◌";
+    case "sent":
+      return "✓";
+    case "received":
+      return "✓✓";
+    case "failure":
+      return "⚠️";
+    default:
+      return "";
+  }
+}
+
+/* -------- RENDER MESSAGES -------- */
 
 function appendMessage(from, text, timestamp, status) {
   const box = document.getElementById("chatMessages");
@@ -63,7 +140,7 @@ function appendSystem(text) {
   box.scrollTop = box.scrollHeight;
 }
 
-/* ---------------- CHAT OPENING ---------------- */
+/* -------- OPEN CHAT -------- */
 
 function openChat(peerId, name) {
   currentChatPeerId = peerId;
@@ -71,11 +148,20 @@ function openChat(peerId, name) {
   const el = document.querySelector(`[data-peerid="${peerId}"]`);
   if (el) el.classList.remove("unread");
 
-  const box = document.getElementById("chatMessages");
-  if (!box) return;
-  box.innerHTML = "";
+  const main = document.getElementById("mainPanel");
+  if (!main) return;
 
-  appendSystem(`Chat with ${name} <${peerId}>`);
+  main.innerHTML = `
+    <h2>Chat with ${name}</h2>
+    <p>PeerID: ${peerId}</p>
+
+    <div id="chatMessages"></div>
+
+    <div id="chatInputRow">
+      <input id="chatInput" placeholder="Type a message…">
+      <button id="chatSend">Send</button>
+    </div>
+  `;
 
   const history = getMessages(peerId);
   history.forEach((m) => {
@@ -94,7 +180,7 @@ function openChat(peerId, name) {
   }
 }
 
-/* ---------------- SEND MESSAGE ---------------- */
+/* -------- SEND MESSAGE -------- */
 
 function sendCurrentMessage() {
   const input = document.getElementById("chatInput");
@@ -103,28 +189,46 @@ function sendCurrentMessage() {
   const text = input.value.trim();
   if (!text) return;
 
+  const peerId = currentChatPeerId;
   const timestamp = Date.now();
-  const id = saveMessage(currentChatPeerId, "me", text, timestamp, "sending");
+  const id = saveMessage(peerId, "me", text, timestamp, "sending");
 
   appendMessage("me", text, timestamp, "sending");
   input.value = "";
 
-  try {
-    const newId = sendToPeer(currentChatPeerId, text);
+  const trySend = () => {
+    try {
+      const newId = sendToPeer(peerId, text);
 
-    updateMessageStatus(currentChatPeerId, id, "sent");
+      updateMessageStatus(peerId, id, "sent");
 
-    onPeerAck = (fromPeer, ackId) => {
-      if (ackId === newId) {
-        updateMessageStatus(currentChatPeerId, id, "received");
-      }
-    };
-  } catch {
-    updateMessageStatus(currentChatPeerId, id, "failure");
+      onPeerAck = (fromPeer, ackId) => {
+        if (ackId === newId) {
+          updateMessageStatus(peerId, id, "received");
+          delete pendingRetries[id];
+        }
+      };
+    } catch {
+      updateMessageStatus(peerId, id, "failure");
+
+      pendingRetries[id] = {
+        peerId,
+        text,
+        lastTry: Date.now(),
+      };
+    }
+  };
+
+  if (!isPeerConnected(peerId)) {
+    connectToPeer(peerId, () => {
+      trySend();
+    });
+  } else {
+    trySend();
   }
 }
 
-/* ---------------- RECEIVE MESSAGE ---------------- */
+/* -------- PEER MESSAGE HANDLER -------- */
 
 onPeerMessage = (peerId, name, msg, id) => {
   const timestamp = Date.now();
@@ -136,3 +240,32 @@ onPeerMessage = (peerId, name, msg, id) => {
     flashContact(peerId);
   }
 };
+
+/* -------- RETRY LOGIC -------- */
+
+setInterval(() => {
+  const now = Date.now();
+
+  for (const id in pendingRetries) {
+    const p = pendingRetries[id];
+
+    if (now - p.lastTry >= 15000) {
+      p.lastTry = now;
+
+      try {
+        const newId = sendToPeer(p.peerId, p.text);
+
+        updateMessageStatus(p.peerId, id, "sent");
+
+        onPeerAck = (fromPeer, ackId) => {
+          if (ackId === newId) {
+            updateMessageStatus(p.peerId, id, "received");
+            delete pendingRetries[id];
+          }
+        };
+      } catch {
+        updateMessageStatus(p.peerId, id, "failure");
+      }
+    }
+  }
+}, 1000);

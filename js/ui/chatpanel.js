@@ -1,4 +1,4 @@
-// chatpanel.js — panneaux UI (profil, add contact)
+// chatpanel.js — panneaux profil + ajout de contact
 
 function showProfilePanel() {
   const main = document.getElementById("mainPanel");
@@ -16,6 +16,38 @@ function showProfilePanel() {
     <div id="myQR"></div>
     <pre>${link}</pre>
   `;
+
+  if (localPeerId) {
+    const qr = new QRCodeStyling({
+      width: 200,
+      height: 200,
+      type: "svg",
+      data: link,
+      dotsOptions: {
+        color: "#000",
+        type: "rounded",
+      },
+      backgroundOptions: {
+        color: "transparent",
+      },
+    });
+
+    qr.append(document.getElementById("myQR"));
+
+    setTimeout(() => {
+      const svg = document.querySelector("#myQR svg");
+      if (!svg) return;
+
+      const svgData = new XMLSerializer().serializeToString(svg);
+      const base64 = "data:image/svg+xml;base64," + btoa(svgData);
+
+      document.getElementById("myQR").innerHTML = `
+        <img id="qrcode" src="${base64}" alt="QR Code">
+      `;
+    }, 20);
+  } else {
+    document.getElementById("myQR").textContent = "PeerID not ready yet.";
+  }
 
   document.getElementById("saveName").onclick = () => {
     profile.name = document.getElementById("myName").value.trim();

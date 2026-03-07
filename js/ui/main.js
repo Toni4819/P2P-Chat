@@ -1,3 +1,5 @@
+// main.js — bootstrap UI + auto-add via URL
+
 function handleAutoAddFromURL() {
   const params = new URLSearchParams(location.search);
   const peerId = params.get("peer");
@@ -20,5 +22,18 @@ window.onload = () => {
   handleAutoAddFromURL();
   showProfilePanel();
 
-  ensurePeerReady(() => {});
+  if (!isSafariBrowser()) {
+    ensurePeerReady(() => {});
+  } else {
+    console.log("Safari detected: PeerJS will start on first user action.");
+  }
 };
+
+document.addEventListener("click", (e) => {
+  const qr = document.getElementById("qrcode");
+  if (!qr) return;
+
+  if (e.target === qr) {
+    qr.classList.toggle("expanded");
+  }
+});
