@@ -1,3 +1,5 @@
+import { MessageHandler } from "./MessageHandler.js";
+
 export let localPeerId = null;
 
 export const PeerManager = {

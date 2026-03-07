@@ -1,3 +1,14 @@
+import {
+  appendMessage,
+  currentChatPeerId,
+  saveMessage,
+} from "../../ui/chat.js";
+import { flashContact } from "../../ui/contacts.js";
+import { AckManager } from "./AckManager.js";
+import { Parser } from "./Parser.js";
+import { PeerManager, localPeerId } from "./PeerManager.js";
+import { Renderer } from "./Renderer.js";
+
 export const MessageHandler = {
   receiveRaw(peerId, raw) {
     let data;
