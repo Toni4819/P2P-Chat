@@ -1,4 +1,4 @@
-import { PeerManager } from "./utils/PeerManager.js";
+import { PeerManager } from "./PeerManager.js";
 
 export const SendManager = {
   pending: {},
