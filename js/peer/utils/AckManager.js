@@ -8,6 +8,7 @@ export const AckManager = {
   },
 
   receiveAck(peerId, id) {
+    console.log("ACK REÇU:", peerId, id);
     updateMessageStatus(peerId, id, "received");
     delete this.pending[id];
   },
