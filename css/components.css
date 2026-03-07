@@ -41,7 +41,7 @@
 /* MAIN PANEL */
 #mainPanel {
   flex: 1;
-  padding: 30px;
+  padding: 20px;
   display: flex;
   flex-direction: column;
   height: 100%;
@@ -97,6 +97,8 @@ input {
   border: 1px solid var(--border);
   background: var(--panel);
   color: var(--text);
+  margin-bottom: 10px;
+  margin-top: 8px;
   outline: none;
 }
 
@@ -171,6 +173,8 @@ input {
 
 #chatInput {
   flex: 1;
+  margin-top: 0px;
+  margin-bottom: 0px;
 }
 
 /* Message wrapper */
