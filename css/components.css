@@ -41,7 +41,7 @@
 /* MAIN PANEL */
 #mainPanel {
   flex: 1;
-  padding: 20px;
+  padding: 30px;
   display: flex;
   flex-direction: column;
   height: 100%;
