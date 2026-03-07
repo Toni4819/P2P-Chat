@@ -1,3 +1,5 @@
+import { escapeHtml } from "../utils/escape.js";
+
 export const LinkHandler = {
   type: "link",
 
