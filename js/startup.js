@@ -2,10 +2,6 @@
 
 import { PeerManager, localPeerId } from "./peer/utils/PeerManager.js";
 
-// startup.js
-
-import { PeerManager, localPeerId } from "./peer/utils/PeerManager.js";
-
 window.addEventListener("DOMContentLoaded", () => {
   // === Overlay ===
   const overlay = document.createElement("div");
