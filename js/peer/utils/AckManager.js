@@ -1,11 +1,11 @@
-const ackHandler = {
+export const AckManager = {
   pending: {},
 
   track(peerId, id) {
-    this.pending[id] = { peerId, lastTry: Date.now() };
+    this.pending[id] = { peerId };
   },
 
-  ack(peerId, id) {
+  receiveAck(peerId, id) {
     updateMessageStatus(peerId, id, "received");
     delete this.pending[id];
   },

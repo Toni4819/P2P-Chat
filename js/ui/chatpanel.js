@@ -1,6 +1,12 @@
 // chatpanel.js
 
-function showProfilePanel(showStartButton = false) {
+import { localPeerId } from "../peer/utils/PeerManager.js";
+import { openChat } from "./chat.js";
+import { addContact, getContact } from "./contacts.js";
+import { profile, saveProfile } from "./profile.js";
+import { renderSidebar } from "./sidebar.js";
+
+export function showProfilePanel() {
   const main = document.getElementById("mainPanel");
 
   const link = `${location.origin}/P2P-Chat/?peer=${localPeerId || ""}&name=${encodeURIComponent(profile.name)}`;
@@ -12,22 +18,11 @@ function showProfilePanel(showStartButton = false) {
     <input id="myName" value="${profile.name}">
     <button id="saveName">Save</button>
 
-    ${showStartButton ? `<button id="startPeerBtn">Start PeerJS</button>` : ""}
-
     <h3>Share your link</h3>
     <div id="myQR"></div>
     <pre>${link}</pre>
   `;
 
-  if (showStartButton) {
-    document.getElementById("startPeerBtn").onclick = () => {
-      ensurePeerReady(() => {
-        showProfilePanel(false);
-      });
-    };
-  }
-
-  // QR code
   if (localPeerId) {
     const qr = new QRCodeStyling({
       width: 200,
@@ -60,7 +55,16 @@ function showProfilePanel(showStartButton = false) {
   };
 }
 
-function showAddContactPanel() {
+document.addEventListener("click", (e) => {
+  const qr = document.getElementById("qrcode");
+  if (!qr) return;
+
+  if (e.target === qr) {
+    qr.classList.toggle("expanded");
+  }
+});
+
+export function showAddContactPanel() {
   const main = document.getElementById("mainPanel");
 
   main.innerHTML = `
@@ -87,7 +91,7 @@ function showAddContactPanel() {
   };
 }
 
-function showContactPanel(id) {
+export function showContactPanel(id) {
   const c = getContact(id);
   if (!c) return;
   openChat(c.peerId, c.name);

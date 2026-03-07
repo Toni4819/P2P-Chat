@@ -1,12 +1,16 @@
-// chat.js — logique de chat + rendu
+// chat.js
 
-let currentChatPeerId = null;
-let pendingRetries = {};
-let onPeerAck = null;
+import { PeerManager } from "../peer/utils/PeerManager.js";
+import { SendManager } from "../peer/utils/SendManager.js";
+import { showProfilePanel } from "./chatpanel.js";
 
-/* -------- MESSAGE STORAGE -------- */
+export let currentChatPeerId = null;
 
-function saveMessage(
+/* ============================
+   MESSAGE STORAGE
+============================ */
+
+export function saveMessage(
   peerId,
   from,
   text,
@@ -17,24 +21,17 @@ function saveMessage(
   const all = JSON.parse(localStorage.getItem("messages") || "{}");
   if (!all[peerId]) all[peerId] = [];
 
-  all[peerId].push({
-    id,
-    from,
-    text,
-    timestamp,
-    status,
-  });
-
+  all[peerId].push({ id, from, text, timestamp, status });
   localStorage.setItem("messages", JSON.stringify(all));
   return id;
 }
 
-function getMessages(peerId) {
+export function getMessages(peerId) {
   const all = JSON.parse(localStorage.getItem("messages") || "{}");
   return all[peerId] || [];
 }
 
-function updateMessageStatus(peerId, id, newStatus) {
+export function updateMessageStatus(peerId, id, newStatus) {
   const all = JSON.parse(localStorage.getItem("messages") || "{}");
   if (!all[peerId]) return;
 
@@ -45,28 +42,28 @@ function updateMessageStatus(peerId, id, newStatus) {
   localStorage.setItem("messages", JSON.stringify(all));
 }
 
-/* -------- RENDER HELPERS -------- */
+/* ============================
+   RENDER HELPERS
+============================ */
+
+function escapeHtml(str) {
+  return str.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+}
 
 function renderMessageContent(text) {
   const parts = text.split(/\s+/);
 
-  const htmlParts = parts.map((part) => {
-    if (part.match(/^https?:\/\/.*\.(gif|png|jpg|jpeg)$/i)) {
-      return `<img src="${part}" class="chatImage">`;
-    }
-
-    if (part.startsWith("http://") || part.startsWith("https://")) {
-      return `<a href="${part}" target="_blank">${part}</a>`;
-    }
-
-    return escapeHtml(part);
-  });
-
-  return htmlParts.join(" ");
-}
-
-function escapeHtml(str) {
-  return str.replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  return parts
+    .map((part) => {
+      if (part.match(/^https?:\/\/.*\.(gif|png|jpg|jpeg)$/i)) {
+        return `<img src="${part}" class="chatImage">`;
+      }
+      if (part.startsWith("http://") || part.startsWith("https://")) {
+        return `<a href="${part}" target="_blank">${part}</a>`;
+      }
+      return escapeHtml(part);
+    })
+    .join(" ");
 }
 
 function formatTimestamp(ts) {
@@ -91,8 +88,7 @@ function formatTimestamp(ts) {
   if (sameDay) return time;
   if (isYesterday) return "Yesterday at " + time;
 
-  const long = `${d.getDate()} ${d.toLocaleString("en", { month: "long" })} at ${time}`;
-  return long;
+  return `${d.getDate()} ${d.toLocaleString("en", { month: "long" })} at ${time}`;
 }
 
 function renderStatus(status) {
@@ -110,9 +106,11 @@ function renderStatus(status) {
   }
 }
 
-/* -------- RENDER MESSAGES -------- */
+/* ============================
+   RENDER MESSAGES
+============================ */
 
-function appendMessage(from, text, timestamp, status) {
+export function appendMessage(from, text, timestamp, status) {
   const box = document.getElementById("chatMessages");
   if (!box) return;
 
@@ -128,7 +126,7 @@ function appendMessage(from, text, timestamp, status) {
   box.scrollTop = box.scrollHeight;
 }
 
-function appendSystem(text) {
+export function appendSystem(text) {
   const box = document.getElementById("chatMessages");
   if (!box) return;
 
@@ -140,9 +138,11 @@ function appendSystem(text) {
   box.scrollTop = box.scrollHeight;
 }
 
-/* -------- OPEN CHAT -------- */
+/* ============================
+   OPEN CHAT
+============================ */
 
-function openChat(peerId, name) {
+export function openChat(peerId, name) {
   currentChatPeerId = peerId;
 
   const el = document.querySelector(`[data-peerid="${peerId}"]`);
@@ -163,16 +163,14 @@ function openChat(peerId, name) {
     </div>
   `;
 
+  // Load history
   const history = getMessages(peerId);
-  history.forEach((m) => {
-    appendMessage(m.from, m.text, m.timestamp, m.status);
-  });
+  history.forEach((m) => appendMessage(m.from, m.text, m.timestamp, m.status));
 
   const input = document.getElementById("chatInput");
   const sendBtn = document.getElementById("chatSend");
 
   if (sendBtn) sendBtn.onclick = sendCurrentMessage;
-
   if (input) {
     input.onkeydown = (e) => {
       if (e.key === "Enter") sendCurrentMessage();
@@ -180,13 +178,16 @@ function openChat(peerId, name) {
   }
 }
 
-/* -------- SEND MESSAGE -------- */
+/* ============================
+   SEND MESSAGE
+============================ */
 
 function sendCurrentMessage() {
-  if (!peer || !localPeerId) {
+  if (!PeerManager.ready) {
     showProfilePanel(true);
     return;
   }
+
   const input = document.getElementById("chatInput");
   if (!input || !currentChatPeerId) return;
 
@@ -195,74 +196,27 @@ function sendCurrentMessage() {
 
   const peerId = currentChatPeerId;
   const timestamp = Date.now();
+
+  // Save locally
   const id = saveMessage(peerId, "me", text, timestamp, "sending");
 
+  // Render immediately
   appendMessage("me", text, timestamp, "sending");
   input.value = "";
 
-  const trySend = () => {
-    try {
-      const newId = sendToPeer(peerId, text);
+  // Send via SendManager (handles retry + ACK)
+  const newId = SendManager.send(peerId, text);
 
-      updateMessageStatus(peerId, id, "sent");
-
-      onPeerAck = (fromPeer, ackId) => {
-        if (ackId === newId) {
-          updateMessageStatus(peerId, id, "received");
-          delete pendingRetries[id];
-        }
-      };
-    } catch {
-      updateMessageStatus(peerId, id, "failure");
-
-      pendingRetries[id] = {
-        peerId,
-        text,
-        lastTry: Date.now(),
-      };
-    }
-  };
-
-  if (!isPeerConnected(peerId)) {
-    connectToPeer(peerId, () => {
-      trySend();
-    });
-  } else {
-    trySend();
+  // If SendManager generated a different ID, sync it
+  if (newId !== id) {
+    updateMessageStatus(peerId, id, "sent");
   }
 }
 
-/* -------- PEER MESSAGE HANDLER -------- */
+/* ============================
+   INIT CHAT (optional)
+============================ */
 
-onPeerMessage = (peerId, name, rawMsg, id) => {
-  messageHandler.receive(peerId, name, rawMsg, id);
-};
-
-/* -------- RETRY LOGIC -------- */
-
-setInterval(() => {
-  const now = Date.now();
-
-  for (const id in pendingRetries) {
-    const p = pendingRetries[id];
-
-    if (now - p.lastTry >= 15000) {
-      p.lastTry = now;
-
-      try {
-        const newId = sendToPeer(p.peerId, p.text);
-
-        updateMessageStatus(p.peerId, id, "sent");
-
-        onPeerAck = (fromPeer, ackId) => {
-          if (ackId === newId) {
-            updateMessageStatus(p.peerId, id, "received");
-            delete pendingRetries[id];
-          }
-        };
-      } catch {
-        updateMessageStatus(p.peerId, id, "failure");
-      }
-    }
-  }
-}, 1000);
+export function initChat() {
+  // Nothing special for now
+}
