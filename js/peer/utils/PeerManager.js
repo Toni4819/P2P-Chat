@@ -45,4 +45,7 @@ export const PeerManager = {
     if (!conn || !conn.open) throw new Error("Not connected");
     conn.send(JSON.stringify(data));
   },
+  getLocalId() {
+    return localPeerId;
+  },
 };
