@@ -1,3 +1,5 @@
+import { updateMessageStatus } from "../../ui/chat.js";
+
 export const AckManager = {
   pending: {},
 
