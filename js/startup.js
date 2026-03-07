@@ -2,6 +2,10 @@
 
 import { PeerManager, localPeerId } from "./peer/utils/PeerManager.js";
 
+// startup.js
+
+import { PeerManager, localPeerId } from "./peer/utils/PeerManager.js";
+
 window.addEventListener("DOMContentLoaded", () => {
   // === Overlay ===
   const overlay = document.createElement("div");
@@ -43,7 +47,19 @@ window.addEventListener("DOMContentLoaded", () => {
     PeerManager.init(() => {
       autoStarted = true;
       console.log("PeerJS auto-start OK:", localPeerId);
-      window.appStart(); // ← ICI
+
+      // URL
+      const url = new URL(location.href);
+      const peer = url.searchParams.get("peer");
+
+      window.appStart();
+
+      if (peer) {
+        console.log("Auto-connecting to peer:", peer);
+        PeerManager.connect(peer, () => {
+          window.openChat(peer, "Unknown");
+        });
+      }
     });
 
     setTimeout(() => {
@@ -61,7 +77,18 @@ window.addEventListener("DOMContentLoaded", () => {
     PeerManager.init(() => {
       console.log("PeerJS started after user interaction:", localPeerId);
       overlay.remove();
-      window.appStart(); // ← ICI
+
+      const url = new URL(location.href);
+      const peer = url.searchParams.get("peer");
+
+      window.appStart();
+
+      if (peer) {
+        console.log("Auto-connecting to peer:", peer);
+        PeerManager.connect(peer, () => {
+          window.openChat(peer, "Unknown");
+        });
+      }
     });
   };
 });
