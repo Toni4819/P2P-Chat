@@ -15,29 +15,6 @@ function getMessages(peerId) {
   return all[peerId] || [];
 }
 
-function appendChat(sender, msg, timestamp = Date.now()) {
-  const log = document.getElementById("chatLog");
-  if (!log) return;
-
-  const div = document.createElement("div");
-
-  if (sender === "System") {
-    div.className = "systemMsg";
-    div.textContent = msg;
-  } else {
-    div.className = "msg " + (sender === profile.name ? "me" : "them");
-    div.innerHTML = `
-      <div class="bubble">${renderMessageContent(msg)}</div>
-      <div class="time">
-        ${formatTimestamp(timestamp)} · ${renderStatus(status)}
-      </div>
-    `;
-  }
-
-  log.appendChild(div);
-  log.scrollTop = log.scrollHeight;
-}
-
 function renderMessageContent(text) {
   // On découpe le message en mots pour analyser chaque segment
   const parts = text.split(/\s+/);
@@ -174,29 +151,8 @@ let currentContact = null;
 function showContactPanel(id) {
   const c = getContact(id);
   if (!c) return;
-  currentContact = c;
 
-  const main = document.getElementById("mainPanel");
-  main.innerHTML = `
-    <h2>Chat with ${c.name}</h2>
-    <p>PeerID: ${c.peerId}</p>
-
-    <div id="chatLog"></div>
-    <textarea id="chatMsg"></textarea>
-    <button id="sendMsgBtn">Send</button>
-  `;
-
-  // Charger l’historique
-  const history = getMessages(c.peerId);
-  history.forEach((m) => {
-    appendChat(m.from === "me" ? profile.name : c.name, m.text, m.timestamp);
-  });
-
-  document.getElementById("sendMsgBtn").onclick = () => {
-    ensurePeerReady(() => {
-      sendMessageFlow();
-    });
-  };
+  openChat(c.peerId, c.name);
 }
 
 let lastSentTime = 0;
@@ -261,15 +217,11 @@ function sendMessageFlow() {
 /* -------- PEER MESSAGE HANDLER -------- */
 
 onPeerMessage = (peerId, name, msg, id) => {
-  // sauvegarde du message reçu
-  saveMessage(peerId, "them", msg, Date.now(), "reçu", id);
+  saveMessage(peerId, "them", msg, Date.now(), "received", id);
 
-  // si le chat est ouvert → afficher immédiatement
   if (currentChatPeerId === peerId) {
-    appendMessage("them", msg, Date.now(), "reçu");
-  }
-  // sinon → flash du contact
-  else {
+    appendMessage("them", msg, Date.now(), "received");
+  } else {
     flashContact(peerId);
   }
 };
@@ -309,7 +261,7 @@ function renderStatus(status) {
   switch (status) {
     case "sending":
       return "◌";
-    case "sended":
+    case "sent":
       return "✓";
     case "received":
       return "✓✓"; // bleu via CSS

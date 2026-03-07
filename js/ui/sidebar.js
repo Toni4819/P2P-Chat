@@ -20,6 +20,7 @@ function renderContactList() {
   contacts.forEach((c) => {
     const div = document.createElement("div");
     div.className = "contactItem";
+    div.dataset.peerid = c.peerId;
 
     div.innerHTML = `
       <span class="contactName">${c.name} (${c.peerId.slice(0, 6)}…)</span>

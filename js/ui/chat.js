@@ -106,7 +106,7 @@ function sendCurrentMessage() {
   try {
     sendToPeer(currentChatPeerId, text);
     saveMessage(currentChatPeerId, "me", text);
-    appendMessage("me", text);
+    appendMessage("me", text, Date.now(), "sending");
     input.value = "";
   } catch (e) {
     console.error(e);
