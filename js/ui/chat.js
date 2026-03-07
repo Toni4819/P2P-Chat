@@ -31,15 +31,18 @@ export function getMessages(peerId) {
   return all[peerId] || [];
 }
 
-export function updateMessageStatus(peerId, id, newStatus) {
-  const all = JSON.parse(localStorage.getItem("messages") || "{}");
-  if (!all[peerId]) return;
+export function updateMessageStatus(peerId, id, status) {
+  const messages = JSON.parse(
+    localStorage.getItem("messages_" + peerId) || "[]",
+  );
+  const msg = messages.find((m) => m.id === id);
+  if (msg) msg.status = status;
+  localStorage.setItem("messages_" + peerId, JSON.stringify(messages));
 
-  const msg = all[peerId].find((m) => m.id === id);
-  if (!msg) return;
-
-  msg.status = newStatus;
-  localStorage.setItem("messages", JSON.stringify(all));
+  if (currentChatPeerId === peerId) {
+    const el = document.querySelector(`[data-msg-id="${id}"] .status`);
+    if (el) el.textContent = renderStatus(status);
+  }
 }
 
 /* ============================
@@ -110,16 +113,21 @@ function renderStatus(status) {
    RENDER MESSAGES
 ============================ */
 
-export function appendMessage(from, text, timestamp, status) {
+export function appendMessage(from, text, timestamp, status, id) {
   const box = document.getElementById("chatMessages");
   if (!box) return;
 
   const div = document.createElement("div");
   div.className = "msg " + (from === "me" ? "me" : "them");
+  div.dataset.msgId = id;
 
   div.innerHTML = `
     <div class="bubble">${renderMessageContent(text)}</div>
-    <div class="time">${formatTimestamp(timestamp)} · ${renderStatus(status)}</div>
+    <div class="time">
+      <time>${formatTimestamp(timestamp)}</time>
+      <span class="sep"> · </span>
+      <span class="status">${renderStatus(status)}</span>
+    </div>
   `;
 
   box.appendChild(div);

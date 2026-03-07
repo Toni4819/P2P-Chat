@@ -41,11 +41,10 @@ export const MessageHandler = {
     saveMessage(peerId, "them", data.msg, timestamp, "received", data.id);
 
     const parts = Parser.parse(data.msg);
-
     const html = Renderer.render(parts);
 
     if (currentChatPeerId === peerId) {
-      appendMessage("them", html, timestamp, "received");
+      appendMessage("them", html, timestamp, "received", data.id);
     } else {
       flashContact(peerId);
     }

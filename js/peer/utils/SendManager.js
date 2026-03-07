@@ -8,6 +8,9 @@ export const SendManager = {
 
   send(peerId, rawMsg) {
     const id = crypto.randomUUID();
+    const timestamp = Date.now();
+
+    appendMessage("me", rawMsg, timestamp, "sending", id);
 
     const packet = {
       type: "msg",
