@@ -181,7 +181,9 @@ export function openChat(peerId, name) {
 
   // Load history
   const history = getMessages(peerId);
-  history.forEach((m) => appendMessage(m.from, m.text, m.timestamp, m.status));
+  history.forEach((m) =>
+    appendMessage(m.from, m.text, m.timestamp, m.status, m.id),
+  );
 
   const input = document.getElementById("chatInput");
   const sendBtn = document.getElementById("chatSend");
