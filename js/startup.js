@@ -11,7 +11,7 @@ window.addEventListener("DOMContentLoaded", () => {
     inset: 0;
     background: #111;
     color: white;
-    display: none;
+    display: flex;
     align-items: center;
     justify-content: center;
     font-size: 24px;
@@ -33,52 +33,19 @@ window.addEventListener("DOMContentLoaded", () => {
 
   document.body.appendChild(overlay);
 
-  function showStartOverlay() {
-    overlay.style.display = "flex";
-  }
-
-  let autoStarted = false;
-
-  try {
-    PeerManager.init(() => {
-      autoStarted = true;
-      console.log("PeerJS auto-start OK:", localPeerId);
-
-      // URL
-      const url = new URL(location.href);
-      const peer = url.searchParams.get("peer");
-
-      window.appStart();
-
-      if (peer) {
-        console.log("Auto-connecting to peer:", peer);
-        PeerManager.connect(peer, () => {
-          window.openChat(peer, "Unknown");
-        });
-      }
-    });
-
-    setTimeout(() => {
-      if (!autoStarted) {
-        console.warn("Auto-start failed → showing Start button");
-        showStartOverlay();
-      }
-    }, 300);
-  } catch (e) {
-    console.warn("Auto-start error → showing Start button", e);
-    showStartOverlay();
-  }
-
+  // === Start only after user interaction (iPad requirement) ===
   document.getElementById("startButton").onclick = () => {
     PeerManager.init(() => {
-      console.log("PeerJS started after user interaction:", localPeerId);
+      console.log("PeerJS started:", localPeerId);
       overlay.remove();
 
       const url = new URL(location.href);
       const peer = url.searchParams.get("peer");
 
+      // Start the app UI
       window.appStart();
 
+      // Auto-connect if ?peer=xxx is in URL
       if (peer) {
         console.log("Auto-connecting to peer:", peer);
         PeerManager.connect(peer, () => {
