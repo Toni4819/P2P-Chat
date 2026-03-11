@@ -1,6 +1,6 @@
 // startup.js
 
-import { PeerManager } from "./peer/utils/PeerManager.js";
+import { PeerManager, localPeerId } from "./peer/utils/PeerManager.js";
 
 window.addEventListener("DOMContentLoaded", () => {
   const overlay = document.createElement("div");
@@ -32,13 +32,12 @@ window.addEventListener("DOMContentLoaded", () => {
 
   document.body.appendChild(overlay);
 
-  // IMPORTANT : PeerManager.init() est préparé mais pas exécuté
-  PeerManager.prepare();
-
+  // === IMPORTANT : PeerManager.init() NE DOIT ÊTRE APPELÉ QU'UNE SEULE FOIS ===
   document.getElementById("startButton").onclick = () => {
     console.log("User interaction → starting PeerJS");
 
-    PeerManager.start(() => {
+    PeerManager.init(() => {
+      console.log("PeerJS started:", localPeerId);
       overlay.remove();
 
       window.appStart();
@@ -47,6 +46,7 @@ window.addEventListener("DOMContentLoaded", () => {
       const peer = url.searchParams.get("peer");
 
       if (peer) {
+        console.log("Auto-connecting to peer:", peer);
         PeerManager.connect(peer, () => {
           window.openChat(peer, "Unknown");
         });
