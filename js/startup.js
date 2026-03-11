@@ -1,9 +1,4 @@
-// startup.js
-
-import { PeerManager, localPeerId } from "./peer/utils/PeerManager.js";
-
 window.addEventListener("DOMContentLoaded", () => {
-  // === Overlay ===
   const overlay = document.createElement("div");
   overlay.id = "startOverlay";
   overlay.style = `
@@ -33,7 +28,6 @@ window.addEventListener("DOMContentLoaded", () => {
 
   document.body.appendChild(overlay);
 
-  // === Start only after user interaction (iPad requirement) ===
   document.getElementById("startButton").onclick = () => {
     PeerManager.init(() => {
       console.log("PeerJS started:", localPeerId);
@@ -42,12 +36,9 @@ window.addEventListener("DOMContentLoaded", () => {
       const url = new URL(location.href);
       const peer = url.searchParams.get("peer");
 
-      // Start the app UI
       window.appStart();
 
-      // Auto-connect if ?peer=xxx is in URL
       if (peer) {
-        console.log("Auto-connecting to peer:", peer);
         PeerManager.connect(peer, () => {
           window.openChat(peer, "Unknown");
         });
