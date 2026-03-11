@@ -6,8 +6,17 @@ export const PeerManager = {
   peer: null,
   connections: new Map(),
   ready: false,
+  initialized: false, // ← empêche la réinitialisation
 
   init(onReady) {
+    // Empêche PeerJS d'être recréé (bug iPad / double init)
+    if (this.initialized) {
+      console.warn("PeerManager.init() ignoré : déjà initialisé");
+      if (this.ready && onReady) onReady(localPeerId);
+      return;
+    }
+    this.initialized = true;
+
     this.peer = new Peer(localStorage.getItem("peerjs_id") || undefined);
 
     this.peer.on("open", (id) => {
