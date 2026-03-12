@@ -11,23 +11,21 @@ export function renderSidebar() {
   const sb = document.getElementById("sidebar");
 
   sb.innerHTML = `
-    <!-- HAMBURGER -->
-    <button id="hamburger" class="hamburger" aria-label="Toggle sidebar">
-  <span class="bar top"></span>
-  <span class="bar middle"></span>
-  <span class="bar bottom"></span>
-</button>
+    <div id="sidebarHeader">
+      <button id="hamburger" class="hamburger" aria-label="Toggle sidebar">
+        <span class="bar top"></span>
+        <span class="bar middle"></span>
+        <span class="bar bottom"></span>
+      </button>
 
-
-    <!-- ACTION BUTTONS -->
-    <div id="sidebarActions">
-      <img src="img/svg/add.svg" id="addContactIcon" class="iconOnly" title="Add contact">
-      <img src="img/svg/profile.svg" id="myProfileIcon" class="iconOnly" title="My profile">
+      <div id="sidebarActions">
+        <img src="img/svg/add.svg" id="addContactIcon" class="iconOnly" title="Add contact">
+        <img src="img/svg/profile.svg" id="myProfileIcon" class="iconOnly" title="My profile">
+      </div>
     </div>
 
     <hr class="separator">
 
-    <!-- CONTACT LIST -->
     <div id="contactList"></div>
   `;
 
@@ -42,7 +40,7 @@ export function renderSidebar() {
     hamburger.classList.toggle("open");
   };
 
-  // === AUTO-CLOSE ON SMALL SCREENS ===
+  // === AUTO CLOSE ON SMALL SCREENS ===
   function autoSidebar() {
     if (window.innerWidth < 700) {
       sb.classList.add("closed");
@@ -56,9 +54,9 @@ export function renderSidebar() {
   window.addEventListener("resize", autoSidebar);
   autoSidebar();
 
-  // === CONTACTS ===
   renderContactList();
 }
+
 
 function renderContactList() {
   const list = document.getElementById("contactList");
@@ -118,4 +116,5 @@ function deleteContact(id) {
   saveContacts(newList);
   location.reload(); // simple et propre
 }
+
 
