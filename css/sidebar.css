@@ -57,6 +57,24 @@
   opacity: 1;
 }
 
+.actionBtn {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.actionLabel {
+  font-size: 14px;
+  color: var(--text);
+  white-space: nowrap;
+}
+
+#sidebar.closed .actionLabel {
+  display: none;
+}
+
+
 /* ============================
    CONTACT LIST
 ============================ */
