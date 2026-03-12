@@ -6,6 +6,13 @@ window.addEventListener("DOMContentLoaded", async () => {
   const invitedPeer = url.searchParams.get("peer");
   const invitedName = url.searchParams.get("name");
 
+  // === 0) Si Peer tourne déjà → ignorer tout le startup ===
+  if (PeerManager.peer && localPeerId) {
+    console.log("PeerJS already loaded, skipping startup");
+    window.appStart();
+    return;
+  }
+
   // === Overlay minimaliste ===
   const overlay = document.createElement("div");
   overlay.id = "startOverlay";
@@ -56,7 +63,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   overlay.onclick = async () => {
     try {
       const id2 = await PeerManager.init();
-      if (!id2) return;
+      if (!id2) return; // iOS refuse encore → ne rien faire
 
       overlay.remove();
       window.appStart();
@@ -67,13 +74,12 @@ window.addEventListener("DOMContentLoaded", async () => {
         });
       }
 
-      // Nettoyage URL
       url.searchParams.delete("peer");
       url.searchParams.delete("name");
       history.replaceState({}, "", url.pathname);
 
     } catch (err) {
-      console.error("Impossible de démarrer PeerJS:", err);
+      console.error("PeerJS starting error:", err);
     }
   };
 });
