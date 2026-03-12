@@ -1,13 +1,28 @@
 /* SIDEBAR */
 #sidebar {
   width: 260px;
-  background: var(--panel);
-  border-right: 1px solid var(--border);
-  padding: 20px;
+  transition: width 0.25s ease;
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  background: var(--panel);
+  border-right: 1px solid var(--border);
+  padding: 15px;
 }
+
+#sidebar.closed {
+  width: 70px;
+}
+
+#sidebar.closed .separator,
+#sidebar.closed #contactList,
+#sidebar.closed .contactItem {
+  display: none;
+}
+
+#sidebar.closed .iconOnly {
+  display: block;
+}
+
 
 .contactItem {
   padding: 10px 8px;
