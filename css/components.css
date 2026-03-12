@@ -4,8 +4,8 @@
   padding: 20px;
   display: flex;
   flex-direction: column;
-  height: 100%;
-  overflow: auto;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* CHAT LOG */
@@ -13,10 +13,12 @@
   background: var(--panel);
   border-radius: 10px;
   padding: 15px;
-  height: 60vh;
   overflow-y: auto;
   border: 1px solid var(--border);
   margin-bottom: 15px;
+  flex: 1;
+  height: auto;
+  min-height: 0;
 }
 
 /* TEXTAREA */
