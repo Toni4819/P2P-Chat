@@ -1,15 +1,21 @@
 .hamburger {
-  width: 32px;
-  height: 32px;
-  padding: 0;
+  width: 36px;
+  height: 36px;
+  padding: 6px;
   border: none;
-  background: transparent;
+  border-radius: 8px;
+  background: var(--accent);
   display: flex;
   flex-direction: column;
   justify-content: center;
   align-items: center;
   gap: 6px;
   cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.hamburger:hover {
+  background: var(--accent-hover);
 }
 
 /* Les 3 barres */
@@ -17,23 +23,32 @@
   width: 24px;
   height: 3px;
   border-radius: 999px;
-  background: var(--text);
+  background: white;
   transition:
     transform 0.25s ease,
     opacity 0.2s ease,
     width 0.2s ease;
 }
 
-/* Animation vers X */
-.hamburger.open .middle {
+/* ÉTAT NORMAL = CROIX (sidebar fermée) */
+.hamburger:not(.open) .middle {
   opacity: 0;
   width: 0;
 }
 
-.hamburger.open .top {
+.hamburger:not(.open) .top {
   transform: translateY(9px) rotate(45deg);
 }
 
-.hamburger.open .bottom {
+.hamburger:not(.open) .bottom {
   transform: translateY(-9px) rotate(-45deg);
+}
+
+/* ÉTAT OPEN = 3 BARRES (sidebar ouverte) */
+.hamburger.open .top,
+.hamburger.open .middle,
+.hamburger.open .bottom {
+  transform: none;
+  opacity: 1;
+  width: 24px;
 }
