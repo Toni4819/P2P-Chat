@@ -13,10 +13,11 @@ export function renderSidebar() {
   sb.innerHTML = `
     <!-- HAMBURGER -->
     <button id="hamburger" class="hamburger" aria-label="Toggle sidebar">
-      <span class="bar top"></span>
-      <span class="bar middle"></span>
-      <span class="bar bottom"></span>
-    </button>
+  <span class="bar top"></span>
+  <span class="bar middle"></span>
+  <span class="bar bottom"></span>
+</button>
+
 
     <!-- ACTION BUTTONS -->
     <div id="sidebarActions">
@@ -117,3 +118,4 @@ function deleteContact(id) {
   saveContacts(newList);
   location.reload(); // simple et propre
 }
+
