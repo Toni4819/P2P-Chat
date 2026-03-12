@@ -1,58 +1,3 @@
-/* SIDEBAR */
-#sidebar {
-  width: 260px;
-  transition: width 0.25s ease;
-  display: flex;
-  flex-direction: column;
-  background: var(--panel);
-  border-right: 1px solid var(--border);
-  padding: 15px;
-}
-
-#sidebar.closed {
-  width: 70px;
-}
-
-#sidebar.closed .separator,
-#sidebar.closed #contactList,
-#sidebar.closed .contactItem {
-  display: none;
-}
-
-#sidebar.closed .iconOnly {
-  display: block;
-}
-
-
-.contactItem {
-  padding: 10px 8px;
-  border-radius: 8px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  cursor: pointer;
-  transition: 0.15s;
-}
-
-.contactItem:hover {
-  background: rgba(255, 255, 255, 0.05);
-}
-
-/* DELETE BUTTON */
-.deleteBtn {
-  width: 18px;
-  height: 18px;
-  opacity: 0.6;
-  transition: 0.15s;
-  filter: invert(0); /* clair */
-}
-
-@media (prefers-color-scheme: dark) {
-  .deleteBtn {
-    filter: invert(1); /* sombre */
-  }
-}
-
 /* MAIN PANEL */
 #mainPanel {
   flex: 1;
@@ -128,7 +73,7 @@ input {
   display: flex;
   justify-content: center;
   align-items: center;
-  z-index: 9999; /* important */
+  z-index: 9999;
 }
 
 #confirmBox {
@@ -142,22 +87,22 @@ input {
   box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
 }
 
+/* QR CODE */
 #qrcode {
   width: 200px;
   height: 200px;
   border-radius: 8px;
   padding: 2px;
   background: white;
-  box-shadow: 0 0 20px rgba(0, 0, 0, 0.15); /* halo */
-  transition: 0.2s;
-  cursor: pointer;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.15);
   transition:
     transform 0.25s ease,
     box-shadow 0.25s ease;
+  cursor: pointer;
 }
 
 #qrcode:hover {
-  box-shadow: 0 0 30px rgba(0, 0, 0, 0.25); /* halo plus fort au hover */
+  box-shadow: 0 0 30px rgba(0, 0, 0, 0.25);
 }
 
 @media (prefers-color-scheme: dark) {
@@ -175,7 +120,7 @@ input {
   box-shadow: 0 0 40px rgba(0, 0, 0, 0.4);
 }
 
-/* Chat container */
+/* CHAT MESSAGES */
 #chatMessages {
   flex: 1;
   padding: 10px;
@@ -192,7 +137,7 @@ input {
   margin-bottom: 0px;
 }
 
-/* Message wrapper */
+/* MESSAGE WRAPPER */
 .msg {
   display: flex;
   flex-direction: column;
@@ -215,11 +160,9 @@ input {
   border-radius: 14px;
   font-size: 14px;
   line-height: 1.35;
-
   white-space: normal;
   overflow-wrap: break-word;
   word-break: break-word;
-
   max-width: 100%;
 }
 
@@ -254,16 +197,17 @@ input {
   display: block;
 }
 
+/* INPUT ROW */
 #chatInputRow {
   display: flex;
   align-items: center;
   gap: 10px;
-
   margin-top: 10px;
   padding-top: 10px;
   border-top: 1px solid var(--border);
 }
 
+/* UNREAD */
 .unread {
   background-color: rgba(255, 255, 255, 0.15) !important;
 }
