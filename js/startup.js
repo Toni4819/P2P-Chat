@@ -6,87 +6,74 @@ window.addEventListener("DOMContentLoaded", async () => {
   const invitedPeer = url.searchParams.get("peer");
   const invitedName = url.searchParams.get("name");
 
-  // === Overlay Start (affiché seulement si auto-start échoue) ===
+  // === Overlay minimaliste ===
   const overlay = document.createElement("div");
   overlay.id = "startOverlay";
   overlay.style = `
     position: fixed;
     inset: 0;
-    background: #111;
+    background: rgba(0,0,0,0.85);
     color: white;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 24px;
+    font-size: 26px;
     z-index: 999999;
     flex-direction: column;
+    text-align: center;
+    user-select: none;
   `;
-  overlay.innerHTML = `
-    <p>Tap to start</p>
-    <button id="startButton" style="
-      padding: 12px 24px;
-      font-size: 20px;
-      border-radius: 8px;
-      border: none;
-      background: #4caf50;
-      color: white;
-    ">Start</button>
-  `;
+  overlay.innerHTML = `<p style="opacity:0.9">Click to start</p>`;
   document.body.appendChild(overlay);
 
-  // === 1) AUTO-START PeerJS ===
+  // === 1) Tentative auto-start ===
+  let id = null;
   try {
-    console.log("Trying auto-start PeerJS…");
+    id = await PeerManager.init();   // Sur iPad → renvoie null
+  } catch (e) {
+    id = null;
+  }
 
-    await PeerManager.init(); // doit throw si fail
-    console.log("Auto-start OK:", localPeerId);
-
+  // === 2) Auto-start OK (Android/PC) ===
+  if (id) {
     overlay.remove();
     window.appStart();
 
     if (invitedPeer) {
-      console.log("Auto-connecting to peer:", invitedPeer);
       PeerManager.connect(invitedPeer, () => {
         window.openChat(invitedPeer, invitedName || "Unknown");
       });
     }
 
-    // Nettoyage de l’URL
+    // Nettoyage URL
     url.searchParams.delete("peer");
     url.searchParams.delete("name");
     history.replaceState({}, "", url.pathname);
-
-    return; // FIN → pas besoin du bouton
-  } catch (err) {
-    console.warn("Auto-start failed → user interaction required", err);
+    return;
   }
 
-  // === 2) AUTO-START FAIL → bouton Start ===
-  document.getElementById("startButton").onclick = async () => {
-    console.log("User clicked Start → starting PeerJS");
-
+  // === 3) Auto-start FAIL → iPad → attendre un tap ===
+  overlay.onclick = async () => {
     try {
-      await PeerManager.init();
-      console.log("PeerJS started:", localPeerId);
+      const id2 = await PeerManager.init();
+      if (!id2) return;
 
       overlay.remove();
       window.appStart();
 
       if (invitedPeer) {
-        console.log("Connecting to invited peer:", invitedPeer);
         PeerManager.connect(invitedPeer, () => {
           window.openChat(invitedPeer, invitedName || "Unknown");
         });
       }
 
-      // Nettoyage de l’URL
+      // Nettoyage URL
       url.searchParams.delete("peer");
       url.searchParams.delete("name");
       history.replaceState({}, "", url.pathname);
 
     } catch (err) {
-      alert("Impossible de démarrer PeerJS.");
-      console.error(err);
+      console.error("Impossible de démarrer PeerJS:", err);
     }
   };
 });
