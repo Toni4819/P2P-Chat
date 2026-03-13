@@ -77,6 +77,7 @@
   font-size: 14px;
   color: var(--text);
   white-space: nowrap;
+  transition: 0.25s
 }
 
 #sidebar.closed .actionLabel {
