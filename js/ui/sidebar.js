@@ -20,12 +20,12 @@ export function renderSidebar() {
 
       <div id="sidebarActions">
         <div class="actionBtn" id="addContactBtn">
-          <img src="img/svg/add.svg" class="iconOnly">
+          <img src="img/svg/plus.svg" class="iconOnly">
           <span class="actionLabel">Add contact</span>
         </div>
 
         <div class="actionBtn" id="myProfileBtn">
-          <img src="img/svg/profile.svg" class="iconOnly">
+          <img src="img/svg/user.svg" class="iconOnly">
           <span class="actionLabel">My profile</span>
         </div>
       </div>
