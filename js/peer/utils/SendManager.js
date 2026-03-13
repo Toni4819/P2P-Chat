@@ -6,60 +6,71 @@ import { PeerManager } from "./PeerManager.js";
 export const SendManager = {
   pending: {},
 
-  send(peerId, rawMsg) {
-    const id = crypto.randomUUID();
-    const timestamp = Date.now();
+  send(peerId, rawMsg, id) {
+  const timestamp = Date.now();
 
-    appendMessage("me", rawMsg, timestamp, "sending", id);
+  // Afficher le message dans l’UI avec le même ID
+  appendMessage("me", rawMsg, timestamp, "sending", id);
 
-    const packet = {
-      type: "msg",
-      id,
-      peerId: PeerManager.getLocalId(),
-      name: profile.name,
-      msg: rawMsg,
-    };
+  const packet = {
+    type: "msg",
+    id, // même ID que dans le storage
+    peerId: PeerManager.getLocalId(),
+    name: profile.name,
+    msg: rawMsg,
+  };
 
-    try {
-      PeerManager.send(peerId, packet);
-      AckManager.track(peerId, id);
-    } catch {
-      this.pending[id] = { peerId, rawMsg, lastTry: Date.now() };
-      updateMessageStatus(peerId, id, "failure");
-    }
+  try {
+    // Tentative d’envoi
+    PeerManager.send(peerId, packet);
 
-    return id;
-  },
+    // On attend l’ACK pour marquer "sent"
+    AckManager.track(peerId, id);
+
+  } catch {
+    // Échec immédiat → marquer failure
+    this.pending[id] = { peerId, rawMsg, lastTry: Date.now() };
+    updateMessageStatus(peerId, id, "failure");
+  }
+
+  return id;
+}
+
 
   retryLoop() {
-    setInterval(() => {
-      const now = Date.now();
+  setInterval(() => {
+    const now = Date.now();
 
-      for (const id in this.pending) {
-        const p = this.pending[id];
+    for (const id in this.pending) {
+      const p = this.pending[id];
 
-        if (now - p.lastTry > 15000) {
-          p.lastTry = now;
+      if (now - p.lastTry > 15000) {
+        p.lastTry = now;
 
-          try {
-            PeerManager.send(p.peerId, {
-              type: "msg",
-              id,
-              peerId: PeerManager.getLocalId(),
-              name: profile.name,
-              msg: p.rawMsg,
-            });
+        try {
+          PeerManager.send(p.peerId, {
+            type: "msg",
+            id, // même ID
+            peerId: PeerManager.getLocalId(),
+            name: profile.name,
+            msg: p.rawMsg,
+          });
 
-            updateMessageStatus(p.peerId, id, "sent");
-            AckManager.track(p.peerId, id);
-            delete this.pending[id];
-          } catch {
-            updateMessageStatus(p.peerId, id, "failure");
-          }
+          // Succès → statut "sent"
+          updateMessageStatus(p.peerId, id, "sent");
+
+          // On attend l’ACK
+          AckManager.track(p.peerId, id);
+
+          delete this.pending[id];
+
+        } catch {
+          // Nouvel échec
+          updateMessageStatus(p.peerId, id, "failure");
         }
       }
-    }, 1000);
-  },
-};
+    }
+  }, 1000);
+}
 
 SendManager.retryLoop();
