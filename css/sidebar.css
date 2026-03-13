@@ -73,11 +73,14 @@
   transition: background 0.15s, border-color 0.15s;
 }
 
-
 .actionLabel {
   font-size: 14px;
   color: var(--text);
   white-space: nowrap;
+}
+
+#sidebar.closed .actionLabel {
+  display: none;
 }
 
 #sidebar.closed .actionBtn {
