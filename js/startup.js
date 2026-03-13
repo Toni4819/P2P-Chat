@@ -1,5 +1,5 @@
 // startup.js
-import { PeerManager, localPeerId } from "./peer/utils/PeerManager.js";
+import { PeerManager } from "./peer/utils/PeerManager.js";
 
 window.addEventListener("DOMContentLoaded", async () => {
   const url = new URL(location.href);
@@ -13,6 +13,16 @@ window.addEventListener("DOMContentLoaded", async () => {
     console.log("PeerJS déjà actif → startup ignoré");
     window.appStart();
     return;
+  }
+
+  // === 1) Charger l'ID sauvegardée dans p2p_profile_peerjs ===
+  let savedId = localStorage.getItem("p2p_profile_peerjs");
+
+  // === 2) Si aucune ID sauvegardée → en créer une ===
+  if (!savedId) {
+    savedId = "peer_" + Math.random().toString(36).substring(2, 10);
+    localStorage.setItem("p2p_profile_peerjs", savedId);
+    console.log("Nouvelle ID générée :", savedId);
   }
 
   // === Overlay minimaliste ===
@@ -35,17 +45,21 @@ window.addEventListener("DOMContentLoaded", async () => {
   overlay.innerHTML = `<p style="opacity:0.9">Click to start</p>`;
   document.body.appendChild(overlay);
 
-  // === 1) Tentative auto-start ===
+  // === 3) Tentative auto-start avec ID forcée ===
   let id = null;
   try {
-    id = await PeerManager.init();   // Sur iPad → renvoie null
+    id = await PeerManager.init(savedId);
   } catch (e) {
     id = null;
   }
 
-  // === 2) Auto-start OK (Android/PC) ===
+  // === 4) Auto-start OK ===
   if (PeerManager.peer?.id) {
     overlay.remove();
+
+    // Sauvegarder l'ID si PeerJS en a généré une autre
+    localStorage.setItem("p2p_profile_peerjs", PeerManager.peer.id);
+
     window.appStart();
 
     if (invitedPeer) {
@@ -54,20 +68,22 @@ window.addEventListener("DOMContentLoaded", async () => {
       });
     }
 
-    // Nettoyage URL
     url.searchParams.delete("peer");
     url.searchParams.delete("name");
     history.replaceState({}, "", url.pathname);
     return;
   }
 
-  // === 3) Auto-start FAIL → iPad → attendre un tap ===
+  // === 5) Auto-start FAIL → iPad → attendre un tap ===
   overlay.onclick = async () => {
-    await PeerManager.init();
+    await PeerManager.init(savedId);
 
-    if (!PeerManager.peer?.id) return; // iOS refuse encore → ne rien faire
+    if (!PeerManager.peer?.id) return; // iOS refuse encore
 
     overlay.remove();
+
+    localStorage.setItem("p2p_profile_peerjs", PeerManager.peer.id);
+
     window.appStart();
 
     if (invitedPeer) {
