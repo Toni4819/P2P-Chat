@@ -7,8 +7,7 @@ window.addEventListener("DOMContentLoaded", async () => {
   const invitedName = url.searchParams.get("name");
 
   // === 0) Vérifier si PeerJS tourne déjà ===
-  // Peer tourne SEULEMENT si peer.id est une string non vide
-  if (PeerManager.peer?.id) {
+  if (PeerManager.peer && PeerManager.peer.id) {
     console.log("Peer déjà actif → startup ignoré");
     window.appStart();
     return;
@@ -62,20 +61,25 @@ window.addEventListener("DOMContentLoaded", async () => {
 
   // === 3) Auto-start FAIL → iPad → attendre un tap ===
   overlay.onclick = async () => {
-    const id2 = await PeerManager.init();
-    if (!id2) return; // iOS refuse encore → ne rien faire
+    try {
+      const id2 = await PeerManager.init();
+      if (!id2) return; // iOS refuse encore → ne rien faire
 
-    overlay.remove();
-    window.appStart();
+      overlay.remove();
+      window.appStart();
 
-    if (invitedPeer) {
-      PeerManager.connect(invitedPeer, () => {
-        window.openChat(invitedPeer, invitedName || "Unknown");
-      });
+      if (invitedPeer) {
+        PeerManager.connect(invitedPeer, () => {
+          window.openChat(invitedPeer, invitedName || "Unknown");
+        });
+      }
+
+      url.searchParams.delete("peer");
+      url.searchParams.delete("name");
+      history.replaceState({}, "", url.pathname);
+
+    } catch (err) {
+      console.error("Impossible de démarrer PeerJS:", err);
     }
-
-    url.searchParams.delete("peer");
-    url.searchParams.delete("name");
-    history.replaceState({}, "", url.pathname);
   };
 });
