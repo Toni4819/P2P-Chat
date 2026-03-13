@@ -221,7 +221,8 @@ function sendCurrentMessage() {
   input.value = "";
 
   // Send via SendManager (handles retry + ACK)
-  const newId = SendManager.send(peerId, text);
+  const newId = SendManager.send(peerId, text, id);
+
 
   // If SendManager generated a different ID, sync it
   if (newId !== id) {
