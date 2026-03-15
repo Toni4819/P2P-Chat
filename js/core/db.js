@@ -7,6 +7,13 @@ export const Database = {
 
       req.onupgradeneeded = (event) => {
         const db = event.target.result;
+        const messages = db.createObjectStore("messages", { keyPath: "id" });
+
+        messages.createIndex("peerid", "peerid", { unique: false });
+        messages.createIndex("timestamp", "timestamp", { unique: false });
+        messages.createIndex("peerid_timestamp", ["peerid", "timestamp"], {
+          unique: false,
+        });
 
         // PROFILE
         if (!db.objectStoreNames.contains("profile")) {
@@ -138,17 +145,35 @@ export const Database = {
   // MESSAGES
   // ---------------------------------------------------------
 
+<<<<<<< HEAD
+  async deleteContact(id) {
+    return new Promise((resolve, reject) => {
+      const tx = Database.db.transaction("contacts", "readwrite");
+      const store = tx.objectStore("contacts");
+=======
   async saveMessage(msg) {
     return new Promise((resolve, reject) => {
       const tx = this.db.transaction("messages", "readwrite");
       const store = tx.objectStore("messages");
+>>>>>>> 1928144a713c8530fc74448c53ddcaebaf5a4273
 
+<<<<<<< HEAD
+      const req = store.delete(id);
+=======
       const req = store.add(msg);
+>>>>>>> 1928144a713c8530fc74448c53ddcaebaf5a4273
 
+<<<<<<< HEAD
+      req.onsuccess = () => resolve();
+      req.onerror = () => reject(req.error);
+    });
+  },
+=======
       req.onsuccess = () => resolve(req.result);
       req.onerror = () => reject(req.error);
     });
   },
+>>>>>>> 1928144a713c8530fc74448c53ddcaebaf5a4273
 
   // ---------------------------------------------------------
   // PROFILE
