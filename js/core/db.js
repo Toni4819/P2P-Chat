@@ -17,7 +17,7 @@ export const Database = {
         if (!db.objectStoreNames.contains("contacts")) {
           const contacts = db.createObjectStore("contacts", {
             keyPath: "id",
-            autoIncrement: true
+            autoIncrement: true,
           });
           contacts.createIndex("peerid", "peerid", { unique: true });
         }
@@ -26,7 +26,7 @@ export const Database = {
         if (!db.objectStoreNames.contains("messages")) {
           const messages = db.createObjectStore("messages", {
             keyPath: "id",
-            autoIncrement: true
+            autoIncrement: true,
           });
           messages.createIndex("contact_id", "contact_id");
         }
@@ -55,7 +55,7 @@ export const Database = {
         peerid,
         name,
         lastonline,
-        isonline
+        isonline,
       };
 
       const req = store.put(contact);
@@ -122,35 +122,33 @@ export const Database = {
     });
   },
 
-async deleteContact(id) {
-  return new Promise((resolve, reject) => {
-    const tx = Database.db.transaction("contacts", "readwrite");
-    const store = tx.objectStore("contacts");
+  async deleteContact(id) {
+    return new Promise((resolve, reject) => {
+      const tx = Database.db.transaction("contacts", "readwrite");
+      const store = tx.objectStore("contacts");
 
-    const req = store.delete(id);
+      const req = store.delete(id);
 
-    req.onsuccess = () => resolve();
-    req.onerror = () => reject(req.error);
-  });
-},
-
+      req.onsuccess = () => resolve();
+      req.onerror = () => reject(req.error);
+    });
+  },
 
   // ---------------------------------------------------------
   // MESSAGES
   // ---------------------------------------------------------
 
-static async deleteContact(id) {
-  return new Promise((resolve, reject) => {
-    const tx = Database.db.transaction("contacts", "readwrite");
-    const store = tx.objectStore("contacts");
+  async saveMessage(msg) {
+    return new Promise((resolve, reject) => {
+      const tx = this.db.transaction("messages", "readwrite");
+      const store = tx.objectStore("messages");
 
-    const req = store.delete(id);
+      const req = store.add(msg);
 
-    req.onsuccess = () => resolve();
-    req.onerror = () => reject(req.error);
-  });
-}
-
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
+  },
 
   // ---------------------------------------------------------
   // PROFILE
@@ -184,5 +182,5 @@ static async deleteContact(id) {
 
       cursor.onerror = () => reject(cursor.error);
     });
-  }
+  },
 };
