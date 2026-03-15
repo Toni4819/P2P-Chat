@@ -3,7 +3,7 @@ export const Database = {
 
   async init() {
     return new Promise((resolve, reject) => {
-      const req = indexedDB.open("P2P-Chat", 2);
+      const req = indexedDB.open("P2P-Chat", 3);
 
       req.onupgradeneeded = (event) => {
         const db = event.target.result;
@@ -26,7 +26,7 @@ export const Database = {
         // CONTACTS
         if (!db.objectStoreNames.contains("contacts")) {
           const contacts = db.createObjectStore("contacts", { keyPath: "id" });
-          contacts.createIndex("peerid", "peerid", { unique: true });
+          contacts.createIndex("peerid", "peerid", { unique: false });
         }
       };
 

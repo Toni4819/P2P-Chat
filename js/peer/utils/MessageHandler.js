@@ -50,6 +50,16 @@ export const MessageHandler = {
       renderSidebar();
     }
 
+    // Name Updater
+    if (!contact) {
+      const autoName = data.name || "Unknown " + peerid.slice(0, 6);
+      contact = await addContact(autoName, peerid);
+      renderSidebar();
+    } else if (data.name && contact.name !== data.name) {
+      await updateContactName(contact.id, data.name);
+      renderSidebar();
+    }
+
     // 3) Save message
     await saveMessage(peerid, "them", data.msg, timestamp, "received", data.id);
 

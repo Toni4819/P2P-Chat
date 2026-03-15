@@ -49,6 +49,14 @@ export async function addContact(name, peerid) {
   return contact;
 }
 
+// Name Updater
+export async function updateContactName(id, newName) {
+  const c = await Database.getContact(id);
+  if (!c) return;
+  c.name = newName;
+  await Database.addContact(c.id, c.peerid, c.name, c.lastonline, c.isonline);
+}
+
 // Récupération par ID interne
 export function getContact(id) {
   return contacts.find((c) => c.id === id);
