@@ -5,6 +5,7 @@ import { Database } from "./core/db.js";
 window.addEventListener("DOMContentLoaded", () => {
   // 0) Load Database
   await Database.init();
+  await loadContacts();
   // 1) Vérifier si un client PeerJS existe déjà (sans en créer un nouveau)
   const peerAlreadyRunning =
     window.Peer &&

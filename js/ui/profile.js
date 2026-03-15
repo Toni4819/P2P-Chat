@@ -1,20 +1,35 @@
 // profile.js
+import { Database } from "./core/db.js";
 
-export const profileKey = "p2p_profile_peerjs";
+export let profile = null;
 
-export function loadProfile() {
-  const raw = localStorage.getItem(profileKey);
-  if (!raw) {
-    const id = crypto.randomUUID();
-    const profile = { id, name: "User " + id.slice(0, 4) };
-    localStorage.setItem(profileKey, JSON.stringify(profile));
-    return profile;
+// Chargement du profil depuis IndexedDB
+export async function loadProfile() {
+  const p = await Database.getProfile();
+
+  if (p) {
+    profile = p;
+    return p;
   }
-  return JSON.parse(raw);
+
+  // Aucun profil → création d’un nouveau
+  const id = crypto.randomUUID();
+  const peerid = localStorage.getItem("peerjs_id") || crypto.randomUUID();
+
+  const newProfile = {
+    id,
+    peerid,
+    name: "User " + id.slice(0, 4),
+  };
+
+  await Database.saveProfile(newProfile.name, newProfile.id, newProfile.peerid);
+
+  profile = newProfile;
+  return newProfile;
 }
 
-export function saveProfile(p) {
-  localStorage.setItem(profileKey, JSON.stringify(p));
+// Sauvegarde du profil
+export async function saveProfile(p) {
+  profile = p;
+  await Database.saveProfile(p.name, p.id, p.peerid);
 }
-
-export let profile = loadProfile();

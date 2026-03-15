@@ -7,10 +7,12 @@ import { showProfilePanel } from "./chatpanel.js";
 export let currentChatPeerId = null;
 
 /* ============================
-   MESSAGE STORAGE
+   MESSAGE STORAGE (IndexedDB)
 ============================ */
 
-export function saveMessage(
+import { Database } from "../core/db.js";
+
+export async function saveMessage(
   peerId,
   from,
   text,
@@ -18,33 +20,60 @@ export function saveMessage(
   status = "sending",
   id = crypto.randomUUID(),
 ) {
-  const all = JSON.parse(localStorage.getItem("messages") || "{}");
-  if (!all[peerId]) all[peerId] = [];
+  const msg = {
+    id,
+    peerid: peerId,
+    from,
+    text,
+    timestamp,
+    status,
+  };
 
-  all[peerId].push({ id, from, text, timestamp, status });
-  localStorage.setItem("messages", JSON.stringify(all));
+  await Database.saveMessage(msg);
   return id;
 }
 
-export function getMessages(peerId) {
-  const all = JSON.parse(localStorage.getItem("messages") || "{}");
-  return all[peerId] || [];
+export async function getMessages(peerId) {
+  return new Promise((resolve, reject) => {
+    const tx = Database.db.transaction("messages", "readonly");
+    const store = tx.objectStore("messages");
+    const index = store.index("peerid");
+
+    const req = index.getAll(peerId);
+
+    req.onsuccess = () => resolve(req.result || []);
+    req.onerror = () => reject(req.error);
+  });
 }
 
-export function updateMessageStatus(peerId, id, status) {
-  const all = JSON.parse(localStorage.getItem("messages") || "{}");
-  const messages = all[peerId] || [];
+export async function updateMessageStatus(peerId, id, status) {
+  return new Promise((resolve, reject) => {
+    const tx = Database.db.transaction("messages", "readwrite");
+    const store = tx.objectStore("messages");
 
-  const msg = messages.find((m) => m.id === id);
-  if (msg) msg.status = status;
+    const req = store.get(id);
 
-  all[peerId] = messages;
-  localStorage.setItem("messages", JSON.stringify(all));
+    req.onsuccess = () => {
+      const msg = req.result;
+      if (!msg) return resolve(false);
 
-  if (currentChatPeerId === peerId) {
-    const el = document.querySelector(`[data-msg-id="${id}"] .status`);
-    if (el) el.textContent = renderStatus(status);
-  }
+      msg.status = status;
+
+      const updateReq = store.put(msg);
+
+      updateReq.onsuccess = () => {
+        if (currentChatPeerId === peerId) {
+          const el = document.querySelector(`[data-msg-id="${id}"] .status`);
+          if (el) el.textContent = renderStatus(status);
+        }
+        resolve(true);
+      };
+
+      updateReq.onerror = () => reject(updateReq.error);
+    };
+
+    req.onerror = () => reject(req.error);
+  });
 }
 
 /* ============================
@@ -180,10 +209,11 @@ export function openChat(peerId, name) {
   `;
 
   // Load history
-  const history = getMessages(peerId);
-  history.forEach((m) =>
-    appendMessage(m.from, m.text, m.timestamp, m.status, m.id),
-  );
+  getMessages(peerId).then((history) => {
+    history.forEach((m) =>
+      appendMessage(m.from, m.text, m.timestamp, m.status, m.id),
+    );
+  });
 
   const input = document.getElementById("chatInput");
   const sendBtn = document.getElementById("chatSend");
@@ -216,15 +246,13 @@ function sendCurrentMessage() {
   const timestamp = Date.now();
 
   // 1) Créer le message dans le storage AVEC l’ID
-  const id = saveMessage(peerId, "me", text, timestamp, "sending");
+  saveMessage(peerId, "me", text, timestamp, "sending").then((id) => {
+    SendManager.send(peerId, text, id);
+  });
 
   // 2) Effacer l’input
   input.value = "";
-
-  // 3) Envoyer via SendManager en lui donnant l’ID
-  SendManager.send(peerId, text, id);
 }
-
 
 /* ============================
    INIT CHAT (optional)
