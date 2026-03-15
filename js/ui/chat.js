@@ -1,5 +1,4 @@
 // chat.js
-console.log("chat module ?", import.meta);
 
 import { PeerManager } from "../peer/utils/PeerManager.js";
 import { SendManager } from "../peer/utils/SendManager.js";
