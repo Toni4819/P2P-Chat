@@ -145,17 +145,18 @@ export const Database = {
   // MESSAGES
   // ---------------------------------------------------------
 
-  async deleteContact(id) {
-    return new Promise((resolve, reject) => {
-      const tx = Database.db.transaction("contacts", "readwrite");
-      const store = tx.objectStore("contacts");
+static async saveMessage(msg) {
+  return new Promise((resolve, reject) => {
+    const tx = Database.db.transaction("messages", "readwrite");
+    const store = tx.objectStore("messages");
 
-      const req = store.add(msg);
+    const req = store.put(msg);
 
-      req.onsuccess = () => resolve();
-      req.onerror = () => reject(req.error);
-    });
-  },
+    req.onsuccess = () => resolve();
+    req.onerror = () => reject(req.error);
+  });
+}
+
 
   // ---------------------------------------------------------
   // PROFILE
