@@ -1,11 +1,14 @@
 // startup.js
 import { PeerManager } from "./peer/utils/PeerManager.js";
 import { Database } from "./core/db.js";
+import { loadContacts } from "./contacts.js";
+import { loadProfile } from "./profile.js";
 
 window.addEventListener("DOMContentLoaded", () => {
   // 0) Load Database
   await Database.init();
   await loadContacts();
+  await loadProfile();
   // 1) Vérifier si un client PeerJS existe déjà (sans en créer un nouveau)
   const peerAlreadyRunning =
     window.Peer &&

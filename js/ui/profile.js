@@ -1,5 +1,5 @@
 // profile.js
-import { Database } from "./core/db.js";
+import { Database } from "../core/db.js";
 
 export let profile = null;
 

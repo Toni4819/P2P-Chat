@@ -1,4 +1,5 @@
 // app.js
+import "./startup.js";
 
 // 1) Enregistrer les handlers PeerJS
 import "./peer/handlers/audio.js";
