@@ -132,24 +132,25 @@ async deleteContact(id) {
     req.onsuccess = () => resolve();
     req.onerror = () => reject(req.error);
   });
-}
+},
 
 
   // ---------------------------------------------------------
   // MESSAGES
   // ---------------------------------------------------------
 
-  async saveMessage(msg) {
-    return new Promise((resolve, reject) => {
-      const tx = this.db.transaction("messages", "readwrite");
-      const store = tx.objectStore("messages");
+static async deleteContact(id) {
+  return new Promise((resolve, reject) => {
+    const tx = Database.db.transaction("contacts", "readwrite");
+    const store = tx.objectStore("contacts");
 
-      const req = store.add(msg);
+    const req = store.delete(id);
 
-      req.onsuccess = () => resolve(req.result);
-      req.onerror = () => reject(req.error);
-    });
-  },
+    req.onsuccess = () => resolve();
+    req.onerror = () => reject(req.error);
+  });
+}
+
 
   // ---------------------------------------------------------
   // PROFILE
