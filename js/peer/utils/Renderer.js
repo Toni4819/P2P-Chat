@@ -5,21 +5,39 @@ import { TextHandler } from "../handlers/text.js";
 
 export const Renderer = {
   render(parts) {
-    return parts
-      .map((p) => {
-        switch (p.type) {
-          case "text":
-            return TextHandler.render(p.value);
-          case "link":
-            return LinkHandler.render(p.value);
-          case "gif":
-            return GifHandler.render(p.value);
-          case "file":
-            return FileHandler.renderIncoming(p);
-          default:
-            return TextHandler.render(p.value);
-        }
-      })
-      .join(" ");
+    let html = "";
+
+    for (const p of parts) {
+      let chunk = "";
+
+      switch (p.type) {
+        case "text":
+          chunk = TextHandler.render(p.value);
+          break;
+
+        case "link":
+          chunk = LinkHandler.render(p.value);
+          break;
+
+        case "gif":
+          chunk = GifHandler.render(p.value);
+          break;
+
+        case "file":
+          chunk = FileHandler.renderIncoming(p);
+          break;
+
+        default:
+          chunk = TextHandler.render(p.value);
+      }
+
+      if (chunk.startsWith("<div") || chunk.startsWith("<img")) {
+        html += chunk + "\n";
+      } else {
+        html += chunk + " ";
+      }
+    }
+
+    return html.trim();
   },
 };

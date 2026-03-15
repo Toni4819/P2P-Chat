@@ -17,7 +17,6 @@ const peerAlreadyRunning =
   window.Peer._instances.length > 0;
 
 if (peerAlreadyRunning) {
-  console.log("PeerJS déjà actif → lancement UI");
   window.appStart();
 }
 
@@ -56,7 +55,7 @@ const finishStart = (id) => {
 // 4) Auto-start PeerJS (si autorisé par le navigateur)
 try {
   PeerManager.init((id) => {
-    console.log("PeerJS prêt (auto-start) avec ID :", id);
+    console.log("PeerJS loaded (auto-start) with ID :", id);
     finishStart(id);
   });
 } catch (e) {
@@ -66,7 +65,7 @@ try {
 // 5) Tap obligatoire (iOS / cas où l’auto-start ne passe pas)
 overlay.onclick = () => {
   PeerManager.init((id) => {
-    console.log("PeerJS prêt (tap) avec ID :", id);
+    console.log("PeerJS loaded (tap) with ID :", id);
     finishStart(id);
   });
 };
