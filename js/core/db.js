@@ -3,7 +3,7 @@ export const Database = {
 
   async init() {
     return new Promise((resolve, reject) => {
-      const req = indexedDB.open("P2P-Chat", 3);
+      const req = indexedDB.open("P2P-Chat", 4);
 
       req.onupgradeneeded = (event) => {
         const db = event.target.result;
@@ -54,6 +54,51 @@ export const Database = {
 
       req.onsuccess = () => resolve(req.result);
       req.onerror = () => reject(req.error);
+    });
+  },
+
+  async getContact(id = null, peerid = null, name = null) {
+    return new Promise((resolve, reject) => {
+      const tx = this.db.transaction("contacts", "readonly");
+      const store = tx.objectStore("contacts");
+
+      // Recherche par ID interne
+      if (id !== null) {
+        const req = store.get(id);
+        req.onsuccess = () => resolve(req.result || null);
+        req.onerror = () => reject(req.error);
+        return;
+      }
+
+      // Recherche par peerid
+      if (peerid !== null) {
+        const index = store.index("peerid");
+        const req = index.get(peerid);
+        req.onsuccess = () => resolve(req.result || null);
+        req.onerror = () => reject(req.error);
+        return;
+      }
+
+      // Recherche par nom
+      if (name !== null) {
+        const results = [];
+        const cursor = store.openCursor();
+
+        cursor.onsuccess = (e) => {
+          const cur = e.target.result;
+          if (cur) {
+            if (cur.value.name === name) results.push(cur.value);
+            cur.continue();
+          } else {
+            resolve(results);
+          }
+        };
+
+        cursor.onerror = () => reject(cursor.error);
+        return;
+      }
+
+      resolve(null);
     });
   },
 

@@ -7,7 +7,7 @@ import {
 import { flashContact, addContact } from "../../ui/contacts.js";
 import { renderSidebar } from "../../ui/sidebar.js";
 
-import { Database } from "../../core/db.js"; // 🔥 nécessaire
+import { Database } from "../../core/db.js";
 import { AckManager } from "./AckManager.js";
 import { Parser } from "./Parser.js";
 import { PeerManager, localPeerId } from "./PeerManager.js";
@@ -43,7 +43,7 @@ export const MessageHandler = {
       peerId: localPeerId,
     });
 
-    // 2) Lire le contact dans IndexedDB (🔥 correct)
+    // 2) Lire le contact dans IndexedDB
     let contact = await Database.getContact(null, peerid);
 
     // 3) AUTO‑ADD si inconnu
