@@ -19,8 +19,6 @@ const peerAlreadyRunning =
 if (peerAlreadyRunning) {
   console.log("PeerJS déjà actif → lancement UI");
   window.appStart();
-  // Pas besoin d’overlay ni d’auto-start
-  return;
 }
 
 // 2) Assurer un peerjs_id simple
